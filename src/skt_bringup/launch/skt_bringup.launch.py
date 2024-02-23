@@ -41,7 +41,7 @@ def generate_launch_description():
     launch_description = LaunchDescription()
     launch_description.add_action(bridge)
     launch_description.add_action(visualize)
-    # launch_description.add_action(localize)
+    launch_description.add_action(localize)
 
 
     return launch_description

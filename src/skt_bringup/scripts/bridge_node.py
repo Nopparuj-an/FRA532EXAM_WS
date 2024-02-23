@@ -16,7 +16,7 @@ from typing import NamedTuple
 from sensor_msgs.msg import Imu 
 from ament_index_python.packages import get_package_share_directory
 import yaml
-import os
+import os,sys
 from std_msgs.msg import Header, Float32, Float32MultiArray
 
 class bridge_node(Node):
@@ -38,6 +38,7 @@ class bridge_node(Node):
 
         self.odom_pose_cov = config['odom_pose_cov']
         self.odom_twist_cov = config['odom_twist_cov']
+
         # Publisher
         self.publish_odom = self.create_publisher(Odometry, 'odom', queqe_size)
         self.publish_imu = self.create_publisher(Imu, 'Imu', queqe_size)
@@ -52,7 +53,7 @@ class bridge_node(Node):
         
         self.subscribe_imu = self.create_subscription(
             Imu,
-            'calc_imu',
+            'imu_data',
             self.feedback_imu,
             queqe_size)
 
@@ -112,8 +113,8 @@ class bridge_node(Node):
         dt = (current_time - self.last_callback_time).to_msg().nanosec * 1e-9
 
         self.last_callback_time = current_time
-        self.leftwheel_speed = msg.data[0] * 0.0675
-        self.rightwheel_speed = msg.data[1] * 0.0675
+        self.leftwheel_speed = msg.data[0] * (0.0675 / 2)
+        self.rightwheel_speed = msg.data[1] * (0.0675 / 2)
 
         self.delta_x = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * math.cos(self.th)
         self.delta_y = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * math.sin(self.th)
@@ -146,8 +147,8 @@ class bridge_node(Node):
         flat_odom_pose_cov = [item for sublist in self.odom_pose_cov for item in sublist]
         flat_odom_twist_cov = [item for sublist in self.odom_twist_cov for item in sublist]
 
-        # odom_msg.pose.covariance = [float(value) for value in flat_odom_pose_cov]
-        # odom_msg.twist.covariance = [float(value) for value in flat_odom_twist_cov]
+        odom_msg.pose.covariance = [float(value) for value in flat_odom_pose_cov]
+        odom_msg.twist.covariance = [float(value) for value in flat_odom_twist_cov]
 
         # Publish the Odometry message
         self.publish_odom.publish(odom_msg)

@@ -29,6 +29,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/dummy_script.py
   scripts/bridge_node.py
+  scripts/calibrate_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
