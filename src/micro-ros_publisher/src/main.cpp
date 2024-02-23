@@ -57,6 +57,8 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   if (timer != NULL) {
     RCSOFTCHECK(rcl_publish(&defaultPublisher, &defaultMsg, NULL));
     defaultMsg.data++;
+
+    publish_imu();
   }
 }
 
@@ -71,9 +73,7 @@ void publish_imu() {
         first_run = false;
     }
 
-    if (!mpu.update()) {
-        return;
-    }
+    mpu.update();
 
     int64_t time_ms = rmw_uros_epoch_millis();
 
@@ -147,7 +147,7 @@ void setup() {
     "cmd_vel"));
 
     // create timer,
-    const unsigned int timer_timeout = 10;
+    const unsigned int timer_timeout = 100;
     RCCHECK(rclc_timer_init_default(
     &defaultTimer,
     &support,
@@ -155,7 +155,7 @@ void setup() {
     timer_callback));
 
     // create executor
-    RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator)); // DON'T FOTGET: Increase the number of handles
+    RCCHECK(rclc_executor_init(&executor, &support.context, 4, &allocator)); // DON'T FOTGET: Increase the number of handles
     RCCHECK(rclc_executor_add_timer(&executor, &defaultTimer));
     RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_subscriber, &cmd_vel_msg, &cmd_vel_subscription_callback, ON_NEW_DATA));
 
@@ -165,5 +165,4 @@ void setup() {
 void loop() {
   delay(1);
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
-  publish_imu();
 }
