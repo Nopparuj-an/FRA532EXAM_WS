@@ -15,15 +15,15 @@ def generate_launch_description():
         get_package_share_directory("skt_description"), "launch"
     )
     
-    # localize_launch_file_dir = os.path.join(
-    #     get_package_share_directory("robot_localization"), "launch"
-    # )
+    localize_launch_file_dir = os.path.join(
+        get_package_share_directory("robot_localization"), "launch"
+    )
 
-    # localize = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [localize_launch_file_dir, "/ekf.launch.py"]
-    #     ),
-    # )
+    localize = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [localize_launch_file_dir, "/ekf.launch.py"]
+        ),
+    )
 
     visualize = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -51,7 +51,7 @@ def generate_launch_description():
     # launch_description.add_action(plant_feedback)
     # launch_description.add_action(pub_odom)
     launch_description.add_action(visualize)
-    # launch_description.add_action(localize)
+    launch_description.add_action(localize)
     # launch_description.add_action(imu)
 
     return launch_description
