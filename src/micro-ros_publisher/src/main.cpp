@@ -57,8 +57,6 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   if (timer != NULL) {
     RCSOFTCHECK(rcl_publish(&defaultPublisher, &defaultMsg, NULL));
     defaultMsg.data++;
-
-    publish_imu();
   }
 }
 
@@ -149,7 +147,7 @@ void setup() {
     "cmd_vel"));
 
     // create timer,
-    const unsigned int timer_timeout = 100;
+    const unsigned int timer_timeout = 10;
     RCCHECK(rclc_timer_init_default(
     &defaultTimer,
     &support,
@@ -165,6 +163,7 @@ void setup() {
 }
 
 void loop() {
-  delay(100);
-  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+  delay(1);
+  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
+  publish_imu();
 }
