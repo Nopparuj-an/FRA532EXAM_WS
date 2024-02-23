@@ -31,28 +31,18 @@ def generate_launch_description():
         ),
     )
 
-    # pub_odom = Node(
-    #     package='jinpao_bringup',
-    #     executable='odom_publisher.py',
-    #     name='odom_publisher',
-    #     remappings={("/odom", "/example/odom"),("/tf", "raw_transform")},
-    # )
-
-    # imu = Node(
-    #     package='plant_message',
-    #     executable='carver_esp32_node.py',
-    #     output='screen',
-    #     respawn=True,
-    #     parameters=[{'COM': '/dev/serial/by-path/pci-0000:00:14.0-usb-0:1.3:1.0'}],
-    #     remappings={("/imu/imu_data", "/example/imu")}
-    # )
+    bridge = Node(
+        package='skt_bringup',
+        executable='bridge_node.py',
+        name='odom_publisher',
+        remappings={("/odom", "/example/odom"),("/tf", "raw_transform")},
+    )
 
     launch_description = LaunchDescription()
-    # launch_description.add_action(plant_feedback)
-    # launch_description.add_action(pub_odom)
+    launch_description.add_action(bridge)
     launch_description.add_action(visualize)
     launch_description.add_action(localize)
-    # launch_description.add_action(imu)
+
 
     return launch_description
 
