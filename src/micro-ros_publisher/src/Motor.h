@@ -167,6 +167,8 @@ public:
 	int turnWheel(unsigned char ID, bool SIDE, int Speed);
 	int moveRW(unsigned char ID, int Position);
 	int moveSpeedRW(unsigned char ID, int Position, int Speed);
+
+	int setSpeed(unsigned char ID, int Speed);
 	
 	void action(void);
 	

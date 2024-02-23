@@ -21,6 +21,9 @@ geometry_msgs__msg__Twist cmd_vel_msg;
 rcl_publisher_t imu_publisher;
 std_msgs__msg__Float32MultiArray imu_msg;
 
+rcl_publisher_t wheel_speeds_publisher;
+std_msgs__msg__Float32MultiArray wheel_speeds_msg;
+
 // micro ROS objects
 rclc_executor_t executor;
 rclc_support_t support;
@@ -42,6 +45,7 @@ void error_loop();
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
 void publish_imu();
 void cmd_vel_subscription_callback(const void * msgin);
+void publish_wheelspeed();
 
 // Error handle loop
 void error_loop() {
@@ -59,6 +63,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     defaultMsg.data++;
 
     publish_imu();
+    publish_wheelspeed();
   }
 }
 
@@ -94,10 +99,60 @@ void publish_imu() {
     RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
 }
 
+void publish_wheelspeed() {
+  static bool first_run = true;
+  if (first_run) {
+    wheel_speeds_msg.data.data = (float *)malloc(2 * sizeof(float));
+    first_run = false;
+  }
+
+  float left_wheel_speed = Motor.readSpeed(1);
+  float right_wheel_speed = Motor.readSpeed(2);
+
+  if(left_wheel_speed > 1024){
+    left_wheel_speed = 1024 - left_wheel_speed;
+  }
+  if(right_wheel_speed > 1024){
+    right_wheel_speed = right_wheel_speed - 1024;
+  } else {
+    right_wheel_speed = -right_wheel_speed;
+  }
+
+  left_wheel_speed = 0.0956657612073996 * left_wheel_speed;
+  right_wheel_speed = 0.0956657612073996 * right_wheel_speed;
+
+  wheel_speeds_msg.data.size = 2;
+  wheel_speeds_msg.data.data[0] = left_wheel_speed;
+  wheel_speeds_msg.data.data[1] = right_wheel_speed;
+  RCCHECK(rcl_publish(&wheel_speeds_publisher, &wheel_speeds_msg, NULL));
+}
+
 void cmd_vel_subscription_callback(const void * msgin)
 {
   const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
-  // Process the incoming message here
+  float linear = msg->linear.x;
+  float angular = msg->angular.z;
+
+  if(linear == 0 && angular == 0) {
+    Motor.turnWheel(1, LEFT, 0);
+    Motor.turnWheel(2, RIGHT, 0);
+    return;
+  }
+
+  float meter2rad = 1.0 / 0.03375; // wheel radius
+  float wheel_separation = 0.169; // distance between wheels
+
+  // convert to wheel speeds of differential drive robot (rev/s)
+  float left_wheel_speed = linear * meter2rad - (angular * wheel_separation / 2) * meter2rad;
+  float right_wheel_speed = linear * meter2rad + (angular * wheel_separation / 2) * meter2rad;
+
+  // convert to motor speeds
+  left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+  right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+
+  // send to motors
+  Motor.setSpeed(1, left_wheel_speed);
+  Motor.setSpeed(2, -right_wheel_speed);
 }
 
 void setup() {
@@ -138,6 +193,12 @@ void setup() {
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
     "/imu"));
+
+    RCCHECK(rclc_publisher_init_default(
+    &wheel_speeds_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/wheel_speeds"));
 
     // create subscriber
     RCCHECK(rclc_subscription_init_default(

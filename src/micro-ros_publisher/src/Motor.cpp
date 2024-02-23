@@ -284,6 +284,37 @@ int MOTOR::turnWheel(unsigned char ID, bool SIDE, int Speed)
 		}
 }
 
+int MOTOR::setSpeed(unsigned char ID, int Speed)
+{
+	int direction = 0;
+	if (Speed < 0)
+	{
+		direction = 4;
+		Speed = -Speed;
+	}
+	Speed = Speed/0.916;
+	char Speed_H,Speed_L;
+	Speed_H = (Speed >> 8) + direction;
+	Speed_L = Speed;                     // 16 bits - 2 x 8 bits variables
+	
+	const unsigned int length = 9;
+	unsigned char packet[length];
+	
+	Checksum = (~(ID + MOTOR_SPEED_LENGTH + MOTOR_WRITE_DATA + MOTOR_GOAL_SPEED_L + Speed_L + Speed_H)) & 0xFF;
+
+	packet[0] = MOTOR_START;
+	packet[1] = MOTOR_START;
+	packet[2] = ID;
+	packet[3] = MOTOR_SPEED_LENGTH;
+	packet[4] = MOTOR_WRITE_DATA;
+	packet[5] = MOTOR_GOAL_SPEED_L;
+	packet[6] = Speed_L;
+	packet[7] = Speed_H;
+	packet[8] = Checksum;
+
+	return (sendMotorPacket(packet, length));
+}
+
 int MOTOR::moveRW(unsigned char ID, int Position)
 {
     char Position_H,Position_L;
