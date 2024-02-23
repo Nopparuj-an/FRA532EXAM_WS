@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "Motor.h" // Include Arduino and Motor library headers
+#include "MPU9250.h"
 
 #define DirectionPin 4 // Define pin for motor direction
 #define BaudRate 115200 // Define baud rate for serial communication
@@ -25,6 +26,7 @@ void setup()
   // Initialize motor control and serial communication
   Motor.begin(BaudRate, DirectionPin, &Serial2);
   Serial.begin(115200);
+  Wire.begin();
   // Read initial motor positions to set offsets
   offset_left = Motor.readPosition(1);
   offset_right = -Motor.readPosition(2);
