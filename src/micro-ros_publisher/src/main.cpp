@@ -97,7 +97,34 @@ void publish_imu() {
 void cmd_vel_subscription_callback(const void * msgin)
 {
   const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
-  // Process the incoming message here
+  float linear = msg->linear.x;
+  float angular = msg->angular.z;
+
+  if(linear == 0 && angular == 0) {
+    Motor.turnWheel(1, LEFT, 0);
+    Motor.turnWheel(2, RIGHT, 0);
+    return;
+  }
+
+  float meter2rad = 1.0 / 0.03375; // wheel radius
+  float wheel_separation = 0.169; // distance between wheels
+
+  // convert to wheel speeds of differential drive robot (rev/s)
+  float left_wheel_speed = linear * meter2rad - (angular * wheel_separation / 2);
+  float right_wheel_speed = linear * meter2rad + (angular * wheel_separation / 2);
+
+  // convert to motor speeds
+  left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+  right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+
+  // calculate negative
+  if(left_wheel_speed < 0) left_wheel_speed = -left_wheel_speed + 1000;
+  right_wheel_speed = -right_wheel_speed;
+  if(right_wheel_speed < 0) right_wheel_speed = -right_wheel_speed + 1000;
+
+  // send to motors
+  Motor.turnWheel(1, LEFT, left_wheel_speed);
+  Motor.turnWheel(2, LEFT, right_wheel_speed);
 }
 
 void setup() {
