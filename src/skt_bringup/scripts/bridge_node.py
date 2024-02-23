@@ -41,19 +41,19 @@ class bridge_node(Node):
 
         # Publisher
         self.publish_odom = self.create_publisher(Odometry, 'odom', queqe_size)
-        self.publish_imu = self.create_publisher(Imu, 'Imu', queqe_size)
+        self.publish_imu = self.create_publisher(Imu, 'Imu_calc', queqe_size)
         self.timer = self.create_timer(0.01, self.timer_callback)
 
         # Subscribers
         self.subscribe_wheel = self.create_subscription(
             Float32MultiArray,
-            'wheel_feedback',
+            'wheel_speeds',
             self.feedback_wheel,
             queqe_size)
         
         self.subscribe_imu = self.create_subscription(
             Imu,
-            'imu_data',
+            'imu',
             self.feedback_imu,
             queqe_size)
 
