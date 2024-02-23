@@ -9,7 +9,6 @@
 
 #include <std_msgs/msg/int32.h>
 #include <std_msgs/msg/float32_multi_array.h>
-#include <sensor_msgs/msg/imu.h>
 #include <geometry_msgs/msg/twist.h>
 
 // micro ROS objects
@@ -18,6 +17,9 @@ std_msgs__msg__Int32 defaultMsg;
 
 rcl_subscription_t cmd_vel_subscriber;
 geometry_msgs__msg__Twist cmd_vel_msg;
+
+rcl_publisher_t imu_publisher;
+std_msgs__msg__Float32MultiArray imu_msg;
 
 // micro ROS objects
 rclc_executor_t executor;
@@ -35,6 +37,12 @@ MPU9250 mpu;
 #define DirectionPin 4
 #define MotorBaudRate 115200
 
+// Function declarations
+void error_loop();
+void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
+void publish_imu();
+void cmd_vel_subscription_callback(const void * msgin);
+
 // Error handle loop
 void error_loop() {
     pinMode(16, OUTPUT);
@@ -49,7 +57,43 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   if (timer != NULL) {
     RCSOFTCHECK(rcl_publish(&defaultPublisher, &defaultMsg, NULL));
     defaultMsg.data++;
+
+    publish_imu();
   }
+}
+
+void publish_imu() {
+    // read 9 dof of MPU9250
+    // transmit to micro-ROS as 11 values in a Float32MultiArray
+    // [time_MSB, time_LSB, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z]
+
+    static bool first_run = true;
+    if (first_run) {
+        imu_msg.data.data = (float *)malloc(11 * sizeof(float));
+        first_run = false;
+    }
+
+    if (!mpu.update()) {
+        return;
+    }
+
+    int64_t time_ms = rmw_uros_epoch_millis();
+
+    imu_msg.data.size = 11;
+    imu_msg.data.data[0] = time_ms >> 32; // Time MSB
+    imu_msg.data.data[1] = time_ms & 0xFFFFFFFF; // Time LSB
+    imu_msg.data.data[2] = mpu.getAccX();
+    imu_msg.data.data[3] = mpu.getAccY();
+    imu_msg.data.data[4] = mpu.getAccZ();
+    imu_msg.data.data[5] = mpu.getGyroX();
+    imu_msg.data.data[6] = mpu.getGyroY();
+    imu_msg.data.data[7] = mpu.getGyroZ();
+    imu_msg.data.data[8] = mpu.getMagX();
+    imu_msg.data.data[9] = mpu.getMagY();
+    imu_msg.data.data[10] = mpu.getMagZ();
+
+    // Publish the IMU data
+    RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
 }
 
 void cmd_vel_subscription_callback(const void * msgin)
@@ -66,7 +110,7 @@ void setup() {
     
     Wire.begin();
     Motor.begin(MotorBaudRate, DirectionPin, &Serial2);
-    delay(2000);
+    // delay(2000);
 
     if (!mpu.setup(0x68)) {
         // MPU connection failed
@@ -81,12 +125,21 @@ void setup() {
     // create node
     RCCHECK(rclc_node_init_default(&node, "micro_ros_platformio_node", "", &support));
 
+    // sync time
+    rmw_uros_sync_session(1000);
+
     // create publisher
     RCCHECK(rclc_publisher_init_default(
     &defaultPublisher,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
     "micro_ros_platformio_node_publisher"));
+
+    RCCHECK(rclc_publisher_init_default(
+    &imu_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/imu"));
 
     // create subscriber
     RCCHECK(rclc_subscription_init_default(
@@ -96,7 +149,7 @@ void setup() {
     "cmd_vel"));
 
     // create timer,
-    const unsigned int timer_timeout = 1000;
+    const unsigned int timer_timeout = 100;
     RCCHECK(rclc_timer_init_default(
     &defaultTimer,
     &support,
