@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Contents-->
+  <xacro:macro name="sensor_link" params="">
+    <link name="imu_link"/>
+    <joint name="imu_mount" type="fixed">
+      <parent link="base_link" />
+      <child link="imu_link" />
+      <origin xyz="0 0 0" rpy="0 0 0" /> 
+    </joint>
+  </xacro:macro>
+</robot>
