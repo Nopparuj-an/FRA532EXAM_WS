@@ -39,11 +39,11 @@
   
   <xacro:macro name="castor_set_graphics" params="">
     <xacro:castor_graphics 
-      name="left_front" 
+      name="front" 
       translation_x="${CASTOR_SEPARATION_X/2}" 
       translation_y="${CASTOR_SEPARATION_Y/2}"
     />
-    <xacro:castor_graphics 
+    <!-- <xacro:castor_graphics 
       name="right_front" 
       translation_x="${CASTOR_SEPARATION_X/2}" 
       translation_y="${-CASTOR_SEPARATION_Y/2}"
@@ -57,7 +57,7 @@
       name="right_rear" 
       translation_x="${-CASTOR_SEPARATION_X/2}" 
       translation_y="${-CASTOR_SEPARATION_Y/2}"
-    />    
+    /> -->
   </xacro:macro>
   
 </robot>

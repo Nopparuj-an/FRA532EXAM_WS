@@ -6,7 +6,7 @@
     <joint name="imu_mount" type="fixed">
       <parent link="base_link" />
       <child link="imu_link" />
-      <origin xyz="0 0 0" rpy="0 0 0" /> 
+      <origin xyz="0 0 0" rpy="0 -0.169 0" /> 
     </joint>
   </xacro:macro>
 </robot>

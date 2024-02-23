@@ -1,22 +1,24 @@
 # wheel visual properties 
-wheel_radius: "0.08"
+wheel_radius: "0.0675"
 wheel_thickness: "0.04"
-wheel_separation: "0.45"
+wheel_separation: "0.169"
 wheel_color: "0 0 0 1"
+
 # base visual properties 
-base_length: "0.62"
-base_width: "0.4205"
+base_length: "0.169"
+base_width: "0.169"
 base_height: "0.306"
 base_elevation: "0.00"
 package_name: "skt_description"
 base_mesh_path: "meshes/skt_body.stl"
 base_mesh_z_offset: "0.018"
 base_color: "1 1 1 1"
+
 # castor visual properties 
 castor_radius: "0.035"
 castor_thickness: "0.02"
-castor_separation_x: "0.62"
-castor_separation_y: "0.4205"
+castor_separation_x: "0.122"
+castor_separation_y: "0.0"
 castor_color: "0.5 0.5 0 1" 
 
   

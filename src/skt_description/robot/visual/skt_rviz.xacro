@@ -14,6 +14,10 @@
         <xacro:include filename="${visual_path}/castor.xacro"/>
         <xacro:castor_set_graphics/>
         
+        <!-- Add wheels -->
+        <xacro:include filename="${visual_path}/wheel.xacro"/>
+        <xacro:wheel_set_graphics/>
+
         <!-- Add sensor link -->
         <xacro:include filename="${visual_path}/sensor.xacro"/>
         <xacro:sensor_link/>
