@@ -59,15 +59,15 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
+        front_castor:
+          Value: true
         imu_link:
           Value: true
-        left_front_castor:
+        left_wheel:
           Value: true
-        left_rear_castor:
+        odom:
           Value: true
-        right_front_castor:
-          Value: true
-        right_rear_castor:
+        right_wheel:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -76,23 +76,23 @@ Visualization Manager:
       Show Names: true
       Tree:
         base_footprint:
+          {}
+        odom:
           base_link:
+            front_castor:
+              {}
             imu_link:
               {}
-            left_front_castor:
+            left_wheel:
               {}
-            left_rear_castor:
-              {}
-            right_front_castor:
-              {}
-            right_rear_castor:
+            right_wheel:
               {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_footprint
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -211,5 +211,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 70
-  Y: 60
+  X: 889
+  Y: 500
