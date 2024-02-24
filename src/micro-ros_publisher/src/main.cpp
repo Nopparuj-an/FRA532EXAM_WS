@@ -78,8 +78,6 @@ void publish_imu() {
         first_run = false;
     }
 
-    mpu.update();
-
     int64_t time_ms = rmw_uros_epoch_millis();
 
     imu_msg.data.size = 11;
@@ -91,9 +89,9 @@ void publish_imu() {
     imu_msg.data.data[5] = mpu.getGyroX();
     imu_msg.data.data[6] = mpu.getGyroY();
     imu_msg.data.data[7] = mpu.getGyroZ();
-    imu_msg.data.data[8] = mpu.getMagX();
-    imu_msg.data.data[9] = mpu.getMagY();
-    imu_msg.data.data[10] = mpu.getMagZ();
+    imu_msg.data.data[8] = mpu.getRoll();
+    imu_msg.data.data[9] = mpu.getPitch();
+    imu_msg.data.data[10] = mpu.getYaw();
 
     // Publish the IMU data
     RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
@@ -169,6 +167,7 @@ void setup() {
         // MPU connection failed
         error_loop();
     }
+    mpu.setMagneticDeclination(-0.53);
 
     allocator = rcl_get_default_allocator();
 
@@ -226,4 +225,5 @@ void setup() {
 void loop() {
   delay(1);
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
+  mpu.update();
 }
