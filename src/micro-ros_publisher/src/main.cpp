@@ -157,13 +157,13 @@ void TaskMicroROS(void *pvParameters) {
   rmw_uros_sync_session(1000);
 
   // create publisher
-  RCCHECK(rclc_publisher_init_default(
+  RCCHECK(rclc_publisher_init_best_effort(
   &imu_publisher,
   &node,
   ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
   "/imu"));
 
-  RCCHECK(rclc_publisher_init_default(
+  RCCHECK(rclc_publisher_init_best_effort(
   &wheel_speeds_publisher,
   &node,
   ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
@@ -185,7 +185,7 @@ void TaskMicroROS(void *pvParameters) {
   timer_callback));
 
   // create executor
-  RCCHECK(rclc_executor_init(&executor, &support.context, 4, &allocator)); // DON'T FOTGET: Increase the number of handles
+  RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator)); // DON'T FOTGET: Increase the number of handles
   RCCHECK(rclc_executor_add_timer(&executor, &defaultTimer));
   RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_subscriber, &cmd_vel_msg, &cmd_vel_subscription_callback, ON_NEW_DATA));
 
@@ -304,5 +304,5 @@ void setup() {
 
 void loop() {
   // Do nothing
-  taskYIELD();
+  delay(INT32_MAX);
 }
