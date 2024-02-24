@@ -77,18 +77,19 @@ void error_loop() {
 void TaskOther(void *pvParameters) {
   while (1) {
     // Read IMU
-    mpu.update();
-    if (xSemaphoreTake(sem_imu, 0) == pdTRUE) {
-      ax = mpu.getAccX();
-      ay = mpu.getAccY();
-      az = mpu.getAccZ();
-      gx = mpu.getGyroX();
-      gy = mpu.getGyroY();
-      gz = mpu.getGyroZ();
-      mx = mpu.getRoll();
-      my = mpu.getPitch();
-      mz = mpu.getYaw();
-      xSemaphoreGive(sem_imu);
+    if (mpu.update()) {
+      if (xSemaphoreTake(sem_imu, 0) == pdTRUE) {
+        ax = mpu.getAccX();
+        ay = mpu.getAccY();
+        az = mpu.getAccZ();
+        gx = mpu.getGyroX();
+        gy = mpu.getGyroY();
+        gz = mpu.getGyroZ();
+        mx = mpu.getRoll();
+        my = mpu.getPitch();
+        mz = mpu.getYaw();
+        xSemaphoreGive(sem_imu);
+      }
     }
 
     // Run Motor
@@ -98,7 +99,7 @@ void TaskOther(void *pvParameters) {
         Motor.turnWheel(2, RIGHT, 0);
       } else {
         float meter2rad = 1.0 / 0.03375; // wheel radius
-        float wheel_separation = 0.169; // distance between wheels
+        float wheel_separation = 0.162; // distance between wheels
 
         // convert to wheel speeds of differential drive robot (rev/s)
         float left_wheel_speed = speed_linear * meter2rad - (speed_angular * wheel_separation / 2) * meter2rad;
