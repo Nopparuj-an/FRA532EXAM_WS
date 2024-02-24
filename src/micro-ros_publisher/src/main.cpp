@@ -53,8 +53,8 @@ SemaphoreHandle_t sem_motor_speed;
 
 float speed_linear = 0;
 float speed_angular = 0;
-int speed_left = 0;
-int speed_right = 0;
+float speed_left = 0;
+float speed_right = 0;
 
 MPU9250 mpu;
 float ax, ay, az, gx, gy, gz, mx, my, mz;
@@ -116,8 +116,25 @@ void TaskOther(void *pvParameters) {
     }
 
     // Read Motor Speed
-    // TODO: Read motor speed
+    if (xSemaphoreTake(sem_motor_speed, 0) == pdTRUE) {
+      float left_wheel_speed = Motor.readSpeed(1);
+      float right_wheel_speed = Motor.readSpeed(2);
 
+      if(left_wheel_speed > 1024){
+        left_wheel_speed = 1024 - left_wheel_speed;
+      }
+      if(right_wheel_speed > 1024){
+        right_wheel_speed = right_wheel_speed - 1024;
+      } else {
+        right_wheel_speed = -right_wheel_speed;
+      }
+
+      speed_left = 0.0956657612073996 * left_wheel_speed;
+      speed_right = 0.0956657612073996 * right_wheel_speed;
+      xSemaphoreGive(sem_motor_speed);
+    }
+
+    // Yeild to other core
     vTaskDelay(1);
   }
 }
@@ -186,7 +203,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
     publish_imu();
-    // publish_wheelspeed();
+    publish_wheelspeed();
   }
 }
 
@@ -245,30 +262,22 @@ void publish_imu() {
 }
 
 void publish_wheelspeed() {
+  static float _speed_left, _speed_right;
+  if (xSemaphoreTake(sem_motor_speed, 0) == pdTRUE) {
+    _speed_left = speed_left;
+    _speed_right = speed_right;
+    xSemaphoreGive(sem_motor_speed);
+  }
+
   static bool first_run = true;
   if (first_run) {
     wheel_speeds_msg.data.data = (float *)malloc(2 * sizeof(float));
     first_run = false;
   }
 
-  float left_wheel_speed = Motor.readSpeed(1);
-  float right_wheel_speed = Motor.readSpeed(2);
-
-  if(left_wheel_speed > 1024){
-    left_wheel_speed = 1024 - left_wheel_speed;
-  }
-  if(right_wheel_speed > 1024){
-    right_wheel_speed = right_wheel_speed - 1024;
-  } else {
-    right_wheel_speed = -right_wheel_speed;
-  }
-
-  left_wheel_speed = 0.0956657612073996 * left_wheel_speed;
-  right_wheel_speed = 0.0956657612073996 * right_wheel_speed;
-
   wheel_speeds_msg.data.size = 2;
-  wheel_speeds_msg.data.data[0] = left_wheel_speed;
-  wheel_speeds_msg.data.data[1] = right_wheel_speed;
+  wheel_speeds_msg.data.data[0] = _speed_left;
+  wheel_speeds_msg.data.data[1] = _speed_right;
   RCCHECK(rcl_publish(&wheel_speeds_publisher, &wheel_speeds_msg, NULL));
 }
 
