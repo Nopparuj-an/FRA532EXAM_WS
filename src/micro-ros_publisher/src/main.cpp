@@ -13,8 +13,8 @@
 
 // ======================================== FUNCTION DECLARATIONS ========================================
 
-void core0Task(void *pvParameters);
-void core1Task(void *pvParameters);
+void TaskOther(void *pvParameters);
+void TaskMicroROS(void *pvParameters);
 void error_loop();
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
 void publish_imu();
@@ -64,7 +64,7 @@ void error_loop() {
 // ================================================ TASKS ================================================
 
 // Other Task
-void core0Task(void *pvParameters) {
+void TaskOther(void *pvParameters) {
   while (1) {
     Serial.println("Core 0");
     delay(1000);
@@ -72,7 +72,7 @@ void core0Task(void *pvParameters) {
 }
 
 // Micro-ROS Task
-void core1Task(void *pvParameters) {
+void TaskMicroROS(void *pvParameters) {
   // Initialize micro-ROS
   // set_microros_serial_transports(Serial);
   IPAddress ip(192, 168, 12, 1);
@@ -123,9 +123,9 @@ void core1Task(void *pvParameters) {
   RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_subscriber, &cmd_vel_msg, &cmd_vel_subscription_callback, ON_NEW_DATA));
 
   while (1) {
-    delay(1);
     RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
     mpu.update();
+    delay(1);
   }
 }
 
@@ -233,13 +233,13 @@ void setup() {
   Motor.begin(MotorBaudRate, DirectionPin, &Serial2);
 
   if (!mpu.setup(0x68)) {
-        // MPU connection failed
-        error_loop();
-    }
+    // MPU connection failed
+    error_loop();
+  }
   mpu.setMagneticDeclination(-0.53);
 
-  xTaskCreatePinnedToCore(core0Task, "Core 0 Task", 10000, NULL, 0, &Task0, 0);
-  xTaskCreatePinnedToCore(core1Task, "Core 1 Task", 30000, NULL, 0, &Task1, 1);
+  xTaskCreatePinnedToCore(TaskMicroROS, "MicroROS Task", 30000, NULL, 0, &Task1, 0);
+  xTaskCreatePinnedToCore(TaskOther, "Other Task", 10000, NULL, 0, &Task0, 1);
 }
 
 void loop() {
