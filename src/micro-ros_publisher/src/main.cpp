@@ -96,23 +96,22 @@ void TaskOther(void *pvParameters) {
       if(speed_linear == 0 && speed_angular == 0) {
         Motor.turnWheel(1, LEFT, 0);
         Motor.turnWheel(2, RIGHT, 0);
-        return;
+      } else {
+        float meter2rad = 1.0 / 0.03375; // wheel radius
+        float wheel_separation = 0.169; // distance between wheels
+
+        // convert to wheel speeds of differential drive robot (rev/s)
+        float left_wheel_speed = speed_linear * meter2rad - (speed_angular * wheel_separation / 2) * meter2rad;
+        float right_wheel_speed = speed_linear * meter2rad + (speed_angular * wheel_separation / 2) * meter2rad;
+
+        // convert to motor speeds
+        left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+        right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+
+        // send to motors
+        Motor.setSpeed(1, left_wheel_speed);
+        Motor.setSpeed(2, -right_wheel_speed);
       }
-
-      float meter2rad = 1.0 / 0.03375; // wheel radius
-      float wheel_separation = 0.169; // distance between wheels
-
-      // convert to wheel speeds of differential drive robot (rev/s)
-      float left_wheel_speed = speed_linear * meter2rad - (speed_angular * wheel_separation / 2) * meter2rad;
-      float right_wheel_speed = speed_linear * meter2rad + (speed_angular * wheel_separation / 2) * meter2rad;
-
-      // convert to motor speeds
-      left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
-      right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
-
-      // send to motors
-      Motor.setSpeed(1, left_wheel_speed);
-      Motor.setSpeed(2, -right_wheel_speed);
     }
 
     // Read Motor Speed
