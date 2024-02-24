@@ -48,6 +48,13 @@ TaskHandle_t Task0;
 TaskHandle_t Task1;
 
 SemaphoreHandle_t sem_imu;
+SemaphoreHandle_t sem_motor_run;
+SemaphoreHandle_t sem_motor_speed;
+
+float speed_linear = 0;
+float speed_angular = 0;
+int speed_left = 0;
+int speed_right = 0;
 
 MPU9250 mpu;
 float ax, ay, az, gx, gy, gz, mx, my, mz;
@@ -69,6 +76,7 @@ void error_loop() {
 // Other Task
 void TaskOther(void *pvParameters) {
   while (1) {
+    // Read IMU
     mpu.update();
     if (xSemaphoreTake(sem_imu, 0) == pdTRUE) {
       ax = mpu.getAccX();
@@ -82,6 +90,34 @@ void TaskOther(void *pvParameters) {
       mz = mpu.getYaw();
       xSemaphoreGive(sem_imu);
     }
+
+    // Run Motor
+    if (xSemaphoreTake(sem_motor_run, 0) == pdTRUE) {
+      if(speed_linear == 0 && speed_angular == 0) {
+        Motor.turnWheel(1, LEFT, 0);
+        Motor.turnWheel(2, RIGHT, 0);
+        return;
+      }
+
+      float meter2rad = 1.0 / 0.03375; // wheel radius
+      float wheel_separation = 0.169; // distance between wheels
+
+      // convert to wheel speeds of differential drive robot (rev/s)
+      float left_wheel_speed = speed_linear * meter2rad - (speed_angular * wheel_separation / 2) * meter2rad;
+      float right_wheel_speed = speed_linear * meter2rad + (speed_angular * wheel_separation / 2) * meter2rad;
+
+      // convert to motor speeds
+      left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+      right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+
+      // send to motors
+      Motor.setSpeed(1, left_wheel_speed);
+      Motor.setSpeed(2, -right_wheel_speed);
+    }
+
+    // Read Motor Speed
+    // TODO: Read motor speed
+
     vTaskDelay(1);
   }
 }
@@ -150,36 +186,16 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
     publish_imu();
-    publish_wheelspeed();
+    // publish_wheelspeed();
   }
 }
 
 void cmd_vel_subscription_callback(const void * msgin)
 {
   const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
-  float linear = msg->linear.x;
-  float angular = msg->angular.z;
-
-  if(linear == 0 && angular == 0) {
-    Motor.turnWheel(1, LEFT, 0);
-    Motor.turnWheel(2, RIGHT, 0);
-    return;
-  }
-
-  float meter2rad = 1.0 / 0.03375; // wheel radius
-  float wheel_separation = 0.169; // distance between wheels
-
-  // convert to wheel speeds of differential drive robot (rev/s)
-  float left_wheel_speed = linear * meter2rad - (angular * wheel_separation / 2) * meter2rad;
-  float right_wheel_speed = linear * meter2rad + (angular * wheel_separation / 2) * meter2rad;
-
-  // convert to motor speeds
-  left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
-  right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
-
-  // send to motors
-  Motor.setSpeed(1, left_wheel_speed);
-  Motor.setSpeed(2, -right_wheel_speed);
+  speed_linear = msg->linear.x;
+  speed_angular = msg->angular.z;
+  xSemaphoreGive(sem_motor_run);
 }
 
 // ================================================ PUBLISHERS ================================================
@@ -271,6 +287,8 @@ void setup() {
   mpu.setMagneticDeclination(-0.53);
 
   sem_imu = xSemaphoreCreateMutex();
+  sem_motor_run = xSemaphoreCreateBinary();
+  sem_motor_speed = xSemaphoreCreateMutex();
 
   xTaskCreatePinnedToCore(TaskMicroROS, "MicroROS Task", 30000, NULL, 1, &Task1, 0);
   xTaskCreatePinnedToCore(TaskOther, "Other Task", 10000, NULL, 1, &Task0, 1);
