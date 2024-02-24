@@ -47,7 +47,10 @@ rcl_timer_t defaultTimer;
 TaskHandle_t Task0;
 TaskHandle_t Task1;
 
+SemaphoreHandle_t sem_imu;
+
 MPU9250 mpu;
+float ax, ay, az, gx, gy, gz, mx, my, mz;
 
 #define DirectionPin 4
 #define MotorBaudRate 115200
@@ -66,8 +69,20 @@ void error_loop() {
 // Other Task
 void TaskOther(void *pvParameters) {
   while (1) {
-    Serial.println("Core 0");
-    delay(1000);
+    mpu.update();
+    if (xSemaphoreTake(sem_imu, 0) == pdTRUE) {
+      ax = mpu.getAccX();
+      ay = mpu.getAccY();
+      az = mpu.getAccZ();
+      gx = mpu.getGyroX();
+      gy = mpu.getGyroY();
+      gz = mpu.getGyroZ();
+      mx = mpu.getRoll();
+      my = mpu.getPitch();
+      mz = mpu.getYaw();
+      xSemaphoreGive(sem_imu);
+    }
+    vTaskDelay(1);
   }
 }
 
@@ -124,7 +139,6 @@ void TaskMicroROS(void *pvParameters) {
 
   while (1) {
     RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
-    mpu.update();
     delay(1);
   }
 }
@@ -143,6 +157,20 @@ void publish_imu() {
     // transmit to micro-ROS as 11 values in a Float32MultiArray
     // [time_MSB, time_LSB, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z]
 
+    static float _ax, _ay, _az, _gx, _gy, _gz, _mx, _my, _mz;
+    if (xSemaphoreTake(sem_imu, 0) == pdTRUE) {
+        _ax = ax;
+        _ay = ay;
+        _az = az;
+        _gx = gx;
+        _gy = gy;
+        _gz = gz;
+        _mx = mx;
+        _my = my;
+        _mz = mz;
+        xSemaphoreGive(sem_imu);
+    }
+
     static bool first_run = true;
     if (first_run) {
         imu_msg.data.data = (float *)malloc(11 * sizeof(float));
@@ -154,15 +182,15 @@ void publish_imu() {
     imu_msg.data.size = 11;
     imu_msg.data.data[0] = time_ms >> 32; // Time MSB
     imu_msg.data.data[1] = time_ms & 0xFFFFFFFF; // Time LSB
-    imu_msg.data.data[2] = mpu.getAccX();
-    imu_msg.data.data[3] = mpu.getAccY();
-    imu_msg.data.data[4] = mpu.getAccZ();
-    imu_msg.data.data[5] = mpu.getGyroX();
-    imu_msg.data.data[6] = mpu.getGyroY();
-    imu_msg.data.data[7] = mpu.getGyroZ();
-    imu_msg.data.data[8] = mpu.getRoll();
-    imu_msg.data.data[9] = mpu.getPitch();
-    imu_msg.data.data[10] = mpu.getYaw();
+    imu_msg.data.data[2] = _ax;
+    imu_msg.data.data[3] = _ay;
+    imu_msg.data.data[4] = _az;
+    imu_msg.data.data[5] = _gx;
+    imu_msg.data.data[6] = _gy;
+    imu_msg.data.data[7] = _gz;
+    imu_msg.data.data[8] = _mx;
+    imu_msg.data.data[9] = _my;
+    imu_msg.data.data[10] = _mz;
 
     // Publish the IMU data
     RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
@@ -238,8 +266,10 @@ void setup() {
   }
   mpu.setMagneticDeclination(-0.53);
 
-  xTaskCreatePinnedToCore(TaskMicroROS, "MicroROS Task", 30000, NULL, 0, &Task1, 0);
-  xTaskCreatePinnedToCore(TaskOther, "Other Task", 10000, NULL, 0, &Task0, 1);
+  sem_imu = xSemaphoreCreateMutex();
+
+  xTaskCreatePinnedToCore(TaskMicroROS, "MicroROS Task", 30000, NULL, 1, &Task1, 0);
+  xTaskCreatePinnedToCore(TaskOther, "Other Task", 10000, NULL, 1, &Task0, 1);
 }
 
 void loop() {
