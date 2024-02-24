@@ -11,17 +11,9 @@
 #include <std_msgs/msg/float32_multi_array.h>
 #include <geometry_msgs/msg/twist.h>
 
-// ======================================== FUNCTION DECLARATIONS ========================================
-
-void core0Task(void *pvParameters);
-void core1Task(void *pvParameters);
-void error_loop();
-void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
-void publish_imu();
-void cmd_vel_subscription_callback(const void * msgin);
-void publish_wheelspeed();
-
-// ============================================== MICRO ROS ==============================================
+// micro ROS objects
+rcl_publisher_t defaultPublisher;
+std_msgs__msg__Int32 defaultMsg;
 
 rcl_subscription_t cmd_vel_subscriber;
 geometry_msgs__msg__Twist cmd_vel_msg;
@@ -42,15 +34,18 @@ rcl_timer_t defaultTimer;
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
-// ================================================ OTHER ================================================
-
-TaskHandle_t Task0;
-TaskHandle_t Task1;
-
+// other objects
 MPU9250 mpu;
 
 #define DirectionPin 4
 #define MotorBaudRate 115200
+
+// Function declarations
+void error_loop();
+void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
+void publish_imu();
+void cmd_vel_subscription_callback(const void * msgin);
+void publish_wheelspeed();
 
 // Error handle loop
 void error_loop() {
@@ -61,78 +56,12 @@ void error_loop() {
     }
 }
 
-// ================================================ TASKS ================================================
-
-// Other Task
-void core0Task(void *pvParameters) {
-  while (1) {
-    Serial.println("Core 0");
-    delay(1000);
-  }
-}
-
-// Micro-ROS Task
-void core1Task(void *pvParameters) {
-  // Initialize micro-ROS
-  // set_microros_serial_transports(Serial);
-  IPAddress ip(192, 168, 12, 1);
-  set_microros_wifi_transports("TrashX", "00000000", ip, 8888);
-
-  allocator = rcl_get_default_allocator();
-
-  //create init_options
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-
-  // create node
-  RCCHECK(rclc_node_init_default(&node, "micro_ros_platformio_node", "", &support));
-
-  // sync time
-  rmw_uros_sync_session(1000);
-
-  // create publisher
-  RCCHECK(rclc_publisher_init_default(
-  &imu_publisher,
-  &node,
-  ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-  "/imu"));
-
-  RCCHECK(rclc_publisher_init_default(
-  &wheel_speeds_publisher,
-  &node,
-  ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-  "/wheel_speeds"));
-
-  // create subscriber
-  RCCHECK(rclc_subscription_init_default(
-  &cmd_vel_subscriber,
-  &node,
-  ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-  "cmd_vel"));
-
-  // create timer,
-  const unsigned int timer_timeout = 100;
-  RCCHECK(rclc_timer_init_default(
-  &defaultTimer,
-  &support,
-  RCL_MS_TO_NS(timer_timeout),
-  timer_callback));
-
-  // create executor
-  RCCHECK(rclc_executor_init(&executor, &support.context, 4, &allocator)); // DON'T FOTGET: Increase the number of handles
-  RCCHECK(rclc_executor_add_timer(&executor, &defaultTimer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_subscriber, &cmd_vel_msg, &cmd_vel_subscription_callback, ON_NEW_DATA));
-
-  while (1) {
-    delay(1);
-    RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
-    mpu.update();
-  }
-}
-
-// Timer callback
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
+    RCSOFTCHECK(rcl_publish(&defaultPublisher, &defaultMsg, NULL));
+    defaultMsg.data++;
+
     publish_imu();
     publish_wheelspeed();
   }
@@ -224,25 +153,77 @@ void cmd_vel_subscription_callback(const void * msgin)
   Motor.setSpeed(2, -right_wheel_speed);
 }
 
-// ================================================ MAIN ================================================
-
 void setup() {
-  Serial.begin(115200);
+    Serial.begin(115200);
+    // set_microros_serial_transports(Serial);
+    IPAddress ip(192, 168, 12, 1);
+    set_microros_wifi_transports("TrashX", "00000000", ip, 8888);
+    
+    Wire.begin();
+    Motor.begin(MotorBaudRate, DirectionPin, &Serial2);
+    // delay(2000);
 
-  Wire.begin();
-  Motor.begin(MotorBaudRate, DirectionPin, &Serial2);
-
-  if (!mpu.setup(0x68)) {
+    if (!mpu.setup(0x68)) {
         // MPU connection failed
         error_loop();
     }
-  mpu.setMagneticDeclination(-0.53);
+    mpu.setMagneticDeclination(-0.53);
 
-  xTaskCreatePinnedToCore(core0Task, "Core 0 Task", 10000, NULL, 0, &Task0, 0);
-  xTaskCreatePinnedToCore(core1Task, "Core 1 Task", 30000, NULL, 0, &Task1, 1);
+    allocator = rcl_get_default_allocator();
+
+    //create init_options
+    RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+
+    // create node
+    RCCHECK(rclc_node_init_default(&node, "micro_ros_platformio_node", "", &support));
+
+    // sync time
+    rmw_uros_sync_session(1000);
+
+    // create publisher
+    RCCHECK(rclc_publisher_init_default(
+    &defaultPublisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    "micro_ros_platformio_node_publisher"));
+
+    RCCHECK(rclc_publisher_init_default(
+    &imu_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/imu"));
+
+    RCCHECK(rclc_publisher_init_default(
+    &wheel_speeds_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/wheel_speeds"));
+
+    // create subscriber
+    RCCHECK(rclc_subscription_init_default(
+    &cmd_vel_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+    "cmd_vel"));
+
+    // create timer,
+    const unsigned int timer_timeout = 100;
+    RCCHECK(rclc_timer_init_default(
+    &defaultTimer,
+    &support,
+    RCL_MS_TO_NS(timer_timeout),
+    timer_callback));
+
+    // create executor
+    RCCHECK(rclc_executor_init(&executor, &support.context, 4, &allocator)); // DON'T FOTGET: Increase the number of handles
+    RCCHECK(rclc_executor_add_timer(&executor, &defaultTimer));
+    RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_subscriber, &cmd_vel_msg, &cmd_vel_subscription_callback, ON_NEW_DATA));
+
+    defaultMsg.data = 0;
 }
 
 void loop() {
-  // Do nothing
-  taskYIELD();
+  delay(1);
+  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
+  mpu.update();
 }
