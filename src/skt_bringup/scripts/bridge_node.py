@@ -18,10 +18,18 @@ from ament_index_python.packages import get_package_share_directory
 import yaml
 import os,sys
 from std_msgs.msg import Header, Float32, Float32MultiArray
+from builtin_interfaces.msg import Time
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 class bridge_node(Node):
     def __init__(self):
         super().__init__('PubOdomNode')
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
         queqe_size = 10
 
         pkg_path = get_package_share_directory('skt_bringup')
@@ -35,13 +43,14 @@ class bridge_node(Node):
         self.accel_cov = config['accel_cov']
         self.gyro_offset = config['gyro_offset']
         self.gyro_cov = config['gyro_cov']
+        self.mag_cov = config['mag_cov']
 
         self.odom_pose_cov = config['odom_pose_cov']
         self.odom_twist_cov = config['odom_twist_cov']
 
         # Publisher
         self.publish_odom = self.create_publisher(Odometry, 'odom', queqe_size)
-        self.publish_imu = self.create_publisher(Imu, 'Imu_calc', queqe_size)
+        self.publish_imu = self.create_publisher(Imu, 'example/imu', qos_profile=qos_profile)
         self.timer = self.create_timer(0.01, self.timer_callback)
 
         # Subscribers
@@ -49,14 +58,14 @@ class bridge_node(Node):
             Float32MultiArray,
             'wheel_speeds',
             self.feedback_wheel,
-            queqe_size)
+            qos_profile=qos_profile)
         
         self.subscribe_imu = self.create_subscription(
-            Imu,
+            Float32MultiArray,
             'imu',
             self.feedback_imu,
-            queqe_size)
-
+            qos_profile=qos_profile
+            )
 
         self.vx = 0.0
         self.vy = 0.0
@@ -73,36 +82,52 @@ class bridge_node(Node):
         self.rightwheel_speed = 0.0
         self.leftwheel_speed = 0.0
 
+        self.relative_yaw = 0.0
+        self.initial_orientation = None
+
+        self.SigP = np.array([[1e-6, 0, 0], 
+                              [0, 1e-6, 0], 
+                              [0, 0, 1e-6]])
         # # Initialize the transform broadcaster
         self.tf_br = TransformBroadcaster(self)
 
     def feedback_imu(self, msg):
         # Subtract offset from linear acceleration and angular velocity
-        accel_x = msg.linear_acceleration.x - self.accel_offset[0]
-        accel_y = msg.linear_acceleration.y - self.accel_offset[1]
-        accel_z = msg.linear_acceleration.z - self.accel_offset[2]
+        accel_x = (msg.data[2] - self.accel_offset[0]) * 9.81
+        accel_y = (msg.data[3] - self.accel_offset[1]) * 9.81
+        accel_z = (msg.data[4] - self.accel_offset[2]) * 9.81
         
-        gyro_x = msg.angular_velocity.x - self.gyro_offset[0]
-        gyro_y = msg.angular_velocity.y - self.gyro_offset[1]
-        gyro_z = msg.angular_velocity.z - self.gyro_offset[2]
+        gyro_x = (msg.data[5] - self.gyro_offset[0]) * math.pi/180
+        gyro_y = (msg.data[6] - self.gyro_offset[1]) * math.pi/180
+        gyro_z = (msg.data[7] - self.gyro_offset[2]) * math.pi/180
 
         # Create IMU message and fill in the data
         imu_msg = Imu()
-        imu_msg.header = msg.header
+        imu_msg.header.frame_id = 'imu_link'
+        imu_msg.header.stamp = self.get_clock().now().to_msg() 
 
         imu_msg.linear_acceleration.x = accel_x
         imu_msg.linear_acceleration.y = accel_y
         imu_msg.linear_acceleration.z = accel_z
-
         
         imu_msg.angular_velocity.x = gyro_x
         imu_msg.angular_velocity.y = gyro_y
         imu_msg.angular_velocity.z = gyro_z
 
-        imu_msg.orientation.x = msg.orientation.x
-        imu_msg.orientation.x = msg.orientation.y
-        imu_msg.orientation.x = msg.orientation.z
+        quaternion = tf_transformations.quaternion_from_euler(msg.data[8]*math.pi/180, msg.data[9]*math.pi/180, msg.data[10]*math.pi/180)
+        imu_msg.orientation.x = quaternion[0]
+        imu_msg.orientation.y = quaternion[1]
+        imu_msg.orientation.z = quaternion[2]
+        imu_msg.orientation.w = quaternion[3]
         
+        flat_accel_cov = [item for sublist in self.accel_cov for item in sublist]
+        flat_gyro_cov = [item for sublist in self.gyro_cov for item in sublist]
+        flat_mag_cov = [item for sublist in self.mag_cov for item in sublist]
+
+        imu_msg.linear_acceleration_covariance = [float(value) for value in flat_accel_cov]
+        imu_msg.angular_velocity_covariance = [float(value) for value in flat_gyro_cov]
+        imu_msg.orientation_covariance = [float(value) for value in flat_mag_cov]
+
         self.publish_imu.publish(imu_msg)
 
     def feedback_wheel(self, msg):
@@ -118,13 +143,37 @@ class bridge_node(Node):
 
         self.delta_x = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * math.cos(self.th)
         self.delta_y = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * math.sin(self.th)
-        self.delta_th = (self.rightwheel_speed - self.leftwheel_speed) / 0.169
+        self.delta_th = (self.rightwheel_speed - self.leftwheel_speed) / 0.162
 
         self.x += self.delta_x * dt
         self.y += self.delta_y * dt
         self.th += self.delta_th * dt
 
-        print(self.th)
+        # # Error propagation
+        # ds = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * dt
+        # dth = (self.rightwheel_speed - self.leftwheel_speed) * dt / 0.1625
+        # b = 0.1625
+        # p13 = -ds * math.sin(self.th + dth/2)
+        # p23 = ds * math.cos(self.th + dth/2)
+
+        # rl11 = 0.5 * math.cos(self.th + dth * 0.5) - (ds * 0.5 * math.sin(self.th + dth * 0.5))/ b
+        # rl12 = 0.5 * math.cos(self.th + dth * 0.5) + (ds * 0.5 * math.sin(self.th + dth * 0.5))/ b
+        # rl21 = 0.5 * math.sin(self.th + dth * 0.5) + (ds * 0.5 * math.cos(self.th + dth * 0.5))/ b
+        # rl22 = 0.5 * math.sin(self.th + dth * 0.5) - (ds * 0.5 * math.cos(self.th + dth * 0.5))/ b
+
+        # Fp = np.array([[1, 0 , p13], 
+        #                [0, 1, p23],
+        #                [0, 0, 1]])
+
+        # Frl = np.array([[rl11, rl12], 
+        #                 [rl21, rl22], 
+        #                 [1/b, -1/b]])
+
+        # kr = 0.1
+        # kl = 0.1
+
+        # A = (Fp @ self.SigP @ Frl)  
+
     def timer_callback(self):
         quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.th)
         # Create Odometry message and fill in the data
@@ -141,7 +190,7 @@ class bridge_node(Node):
             w=quaternion[3]
         )
         )
-        odom_msg.twist.twist.linear = Vector3(x=self.delta_x, y=self.delta_y, z=0.0)
+        odom_msg.twist.twist.linear = Vector3(x=self.delta_x, y=self.delta_y , z=0.0)
         odom_msg.twist.twist.angular = Vector3(x=0.0, y=0.0, z=self.delta_th)
 
         flat_odom_pose_cov = [item for sublist in self.odom_pose_cov for item in sublist]

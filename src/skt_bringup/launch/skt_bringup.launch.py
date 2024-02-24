@@ -35,7 +35,7 @@ def generate_launch_description():
         package='skt_bringup',
         executable='bridge_node.py',
         name='odom_publisher',
-        # remappings={("/odom", "/example/odom"),("/tf", "raw_transform")},
+        remappings={("/odom", "/example/odom"),("/tf", "raw_transform")},
     )
 
     launch_description = LaunchDescription()
