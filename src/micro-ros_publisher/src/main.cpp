@@ -125,7 +125,7 @@ void TaskMicroROS(void *pvParameters) {
   "cmd_vel"));
 
   // create timer,
-  const unsigned int timer_timeout = 100;
+  const unsigned int timer_timeout = 20;
   RCCHECK(rclc_timer_init_default(
   &defaultTimer,
   &support,
@@ -143,6 +143,8 @@ void TaskMicroROS(void *pvParameters) {
   }
 }
 
+// ================================================ CALLBACKS ================================================
+
 // Timer callback
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
@@ -151,6 +153,36 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     publish_wheelspeed();
   }
 }
+
+void cmd_vel_subscription_callback(const void * msgin)
+{
+  const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
+  float linear = msg->linear.x;
+  float angular = msg->angular.z;
+
+  if(linear == 0 && angular == 0) {
+    Motor.turnWheel(1, LEFT, 0);
+    Motor.turnWheel(2, RIGHT, 0);
+    return;
+  }
+
+  float meter2rad = 1.0 / 0.03375; // wheel radius
+  float wheel_separation = 0.169; // distance between wheels
+
+  // convert to wheel speeds of differential drive robot (rev/s)
+  float left_wheel_speed = linear * meter2rad - (angular * wheel_separation / 2) * meter2rad;
+  float right_wheel_speed = linear * meter2rad + (angular * wheel_separation / 2) * meter2rad;
+
+  // convert to motor speeds
+  left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+  right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+
+  // send to motors
+  Motor.setSpeed(1, left_wheel_speed);
+  Motor.setSpeed(2, -right_wheel_speed);
+}
+
+// ================================================ PUBLISHERS ================================================
 
 void publish_imu() {
     // read 9 dof of MPU9250
@@ -222,34 +254,6 @@ void publish_wheelspeed() {
   wheel_speeds_msg.data.data[0] = left_wheel_speed;
   wheel_speeds_msg.data.data[1] = right_wheel_speed;
   RCCHECK(rcl_publish(&wheel_speeds_publisher, &wheel_speeds_msg, NULL));
-}
-
-void cmd_vel_subscription_callback(const void * msgin)
-{
-  const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
-  float linear = msg->linear.x;
-  float angular = msg->angular.z;
-
-  if(linear == 0 && angular == 0) {
-    Motor.turnWheel(1, LEFT, 0);
-    Motor.turnWheel(2, RIGHT, 0);
-    return;
-  }
-
-  float meter2rad = 1.0 / 0.03375; // wheel radius
-  float wheel_separation = 0.169; // distance between wheels
-
-  // convert to wheel speeds of differential drive robot (rev/s)
-  float left_wheel_speed = linear * meter2rad - (angular * wheel_separation / 2) * meter2rad;
-  float right_wheel_speed = linear * meter2rad + (angular * wheel_separation / 2) * meter2rad;
-
-  // convert to motor speeds
-  left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
-  right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
-
-  // send to motors
-  Motor.setSpeed(1, left_wheel_speed);
-  Motor.setSpeed(2, -right_wheel_speed);
 }
 
 // ================================================ MAIN ================================================
