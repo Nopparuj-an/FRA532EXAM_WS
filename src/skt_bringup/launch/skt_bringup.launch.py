@@ -19,11 +19,11 @@ def generate_launch_description():
         get_package_share_directory("robot_localization"), "launch"
     )
 
-    # localize = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [localize_launch_file_dir, "/ekf.launch.py"]
-    #     ),
-    # )
+    localize = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [localize_launch_file_dir, "/ekf.launch.py"]
+        ),
+    )
 
     visualize = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -41,7 +41,7 @@ def generate_launch_description():
     launch_description = LaunchDescription()
     launch_description.add_action(bridge)
     launch_description.add_action(visualize)
-    # launch_description.add_action(localize)
+    launch_description.add_action(localize)
 
 
     return launch_description
