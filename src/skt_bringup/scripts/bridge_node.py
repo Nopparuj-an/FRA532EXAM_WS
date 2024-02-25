@@ -51,7 +51,7 @@ class bridge_node(Node):
         # Publisher
         self.publish_odom = self.create_publisher(Odometry, 'odom', queqe_size)
         self.publish_imu = self.create_publisher(Imu, 'example/imu', qos_profile=qos_profile)
-        self.timer = self.create_timer(0.01, self.timer_callback)
+        self.timer = self.create_timer(0.05, self.timer_callback)
 
         # Subscribers
         self.subscribe_wheel = self.create_subscription(
@@ -106,6 +106,8 @@ class bridge_node(Node):
         imu_msg.header.frame_id = 'imu_link'
         imu_msg.header.stamp = self.get_clock().now().to_msg() 
 
+        if abs(accel_x) < 0.3:
+            accel_x = 0.0
         imu_msg.linear_acceleration.x = accel_x
         imu_msg.linear_acceleration.y = accel_y
         imu_msg.linear_acceleration.z = accel_z
@@ -114,7 +116,7 @@ class bridge_node(Node):
         imu_msg.angular_velocity.y = gyro_y
         imu_msg.angular_velocity.z = gyro_z
 
-        quaternion = tf_transformations.quaternion_from_euler(msg.data[8]*math.pi/180, msg.data[9]*math.pi/180, msg.data[10]*math.pi/180)
+        quaternion = tf_transformations.quaternion_from_euler(msg.data[8]*math.pi/180, -1*msg.data[9]*math.pi/180, -1*msg.data[10]*math.pi/180)
         imu_msg.orientation.x = quaternion[0]
         imu_msg.orientation.y = quaternion[1]
         imu_msg.orientation.z = quaternion[2]
@@ -190,7 +192,7 @@ class bridge_node(Node):
             w=quaternion[3]
         )
         )
-        odom_msg.twist.twist.linear = Vector3(x=self.delta_x, y=self.delta_y , z=0.0)
+        odom_msg.twist.twist.linear = Vector3(x=round((self.rightwheel_speed + self.leftwheel_speed), 5 )* 0.5, y=0.0, z=0.0)
         odom_msg.twist.twist.angular = Vector3(x=0.0, y=0.0, z=self.delta_th)
 
         flat_odom_pose_cov = [item for sublist in self.odom_pose_cov for item in sublist]
