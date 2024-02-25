@@ -6,9 +6,21 @@ PLACEHOLDER
 
 ## Microcontroller Programming
 
+You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an/FRA532EXAM_WS/blob/master/src/micro-ros_publisher/src/main.cpp)
+
 - **Micro-ROS Wi-Fi Connection**
 
-    PLACEHOLDER
+    Using the following code
+  
+    ```cpp
+    // Initialize micro-ROS
+    IPAddress ip(192, 168, 12, 1);
+    set_microros_wifi_transports("TrashX", "00000000", ip, 8888);
+    ```
+    
+    The microcontroller is capable of connecting to the Micro-ROS agent.
+  
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/bb2bea8a-add6-4df5-b29c-450aaf60f8c7)
 
 - **IMU Read and Publish**
 
