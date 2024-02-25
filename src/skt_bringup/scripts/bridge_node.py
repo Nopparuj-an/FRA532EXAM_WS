@@ -151,30 +151,37 @@ class bridge_node(Node):
         self.y += self.delta_y * dt
         self.th += self.delta_th * dt
 
-        # # Error propagation
-        # ds = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * dt
-        # dth = (self.rightwheel_speed - self.leftwheel_speed) * dt / 0.1625
-        # b = 0.1625
-        # p13 = -ds * math.sin(self.th + dth/2)
-        # p23 = ds * math.cos(self.th + dth/2)
+        # Error propagation
+        kr = 1.0e-5
+        kl = 1.0e-5
 
-        # rl11 = 0.5 * math.cos(self.th + dth * 0.5) - (ds * 0.5 * math.sin(self.th + dth * 0.5))/ b
-        # rl12 = 0.5 * math.cos(self.th + dth * 0.5) + (ds * 0.5 * math.sin(self.th + dth * 0.5))/ b
-        # rl21 = 0.5 * math.sin(self.th + dth * 0.5) + (ds * 0.5 * math.cos(self.th + dth * 0.5))/ b
-        # rl22 = 0.5 * math.sin(self.th + dth * 0.5) - (ds * 0.5 * math.cos(self.th + dth * 0.5))/ b
+        ds = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * dt
+        b = 0.1625
+        dth = (self.rightwheel_speed - self.leftwheel_speed) * dt / b
+        p13 = -ds * math.sin(self.th + dth/2)
+        p23 = ds * math.cos(self.th + dth/2)
 
-        # Fp = np.array([[1, 0 , p13], 
-        #                [0, 1, p23],
-        #                [0, 0, 1]])
+        rl11 = 0.5 * math.cos(self.th + dth * 0.5) - (ds * 0.5 * math.sin(self.th + dth * 0.5))/ b
+        rl12 = 0.5 * math.cos(self.th + dth * 0.5) + (ds * 0.5 * math.sin(self.th + dth * 0.5))/ b
+        rl21 = 0.5 * math.sin(self.th + dth * 0.5) + (ds * 0.5 * math.cos(self.th + dth * 0.5))/ b
+        rl22 = 0.5 * math.sin(self.th + dth * 0.5) - (ds * 0.5 * math.cos(self.th + dth * 0.5))/ b
 
-        # Frl = np.array([[rl11, rl12], 
-        #                 [rl21, rl22], 
-        #                 [1/b, -1/b]])
+        Fp = np.array([[1, 0 , p13], 
+                       [0, 1, p23],
+                       [0, 0, 1]])
 
-        # kr = 0.1
-        # kl = 0.1
+        Frl = np.array([[rl11, rl12], 
+                        [rl21, rl22], 
+                        [1/b, -1/b]])
 
-        # A = (Fp @ self.SigP @ Frl)  
+        rl_cov = np.array([[kr * abs(self.rightwheel_speed * dt), 0],
+                           [0, kl * abs(self.rightwheel_speed * dt)]])
+
+        A = (Fp @ self.SigP @ Fp.transpose())
+
+        B = (Frl @ rl_cov @ Frl.transpose())
+        self.SigP = A + B
+        print(self.SigP)
 
     def timer_callback(self):
         quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.th)
@@ -192,7 +199,7 @@ class bridge_node(Node):
             w=quaternion[3]
         )
         )
-        odom_msg.twist.twist.linear = Vector3(x=round((self.rightwheel_speed + self.leftwheel_speed), 5 )* 0.5, y=0.0, z=0.0)
+        odom_msg.twist.twist.linear = Vector3(x=round((self.rightwheel_speed + self.leftwheel_speed), 5)* 0.5, y=0.0, z=0.0)
         odom_msg.twist.twist.angular = Vector3(x=0.0, y=0.0, z=self.delta_th)
 
         flat_odom_pose_cov = [item for sublist in self.odom_pose_cov for item in sublist]
