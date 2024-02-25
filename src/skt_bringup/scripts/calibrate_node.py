@@ -95,7 +95,8 @@ class Calibrate_imu(Node):
     
     def write_config_to_yaml(self):
         pkg_path = get_package_share_directory('skt_bringup')
-        yaml_file = os.path.join(pkg_path, 'config', 'feedback_config.yaml')
+        workspace_path = pkg_path.split('install')[0]
+        yaml_file = os.path.join(workspace_path, 'config', 'feedback_config.yaml')
 
         # Read parameters from YAML file
         with open(yaml_file, 'r') as file:
