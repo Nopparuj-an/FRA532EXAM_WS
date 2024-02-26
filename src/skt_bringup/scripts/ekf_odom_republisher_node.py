@@ -15,8 +15,8 @@ from geometry_msgs.msg import (Point, Pose, PoseWithCovariance, Quaternion,
 class ekfOdomRepublisher(Node):
     def __init__(self):
         super().__init__('ekf_odom_republisher_node')
-        for i in range(5):
-            self.get_logger().info(f"Waiting for ekf node: {5-i}")
+        for i in range(7):
+            self.get_logger().info(f"Waiting for ekf node: {7-i}")
             time.sleep(1)
         self.create_subscription(Odometry, 'odometry/filtered', self.ekf_odom_callback, 10)
         self.publish_odom = self.create_publisher(Odometry, 'odom', 10)
@@ -24,7 +24,7 @@ class ekfOdomRepublisher(Node):
 
         self.margin = 0.0002
         self.dt = 0.01
-        self.amount = 100  # amount of data to calibrate
+        self.amount = 20  # amount of data to calibrate
 
         self.state = 0  # 0: calibrating, 1: transition, 2: running
         self.vx_sum = 0.0

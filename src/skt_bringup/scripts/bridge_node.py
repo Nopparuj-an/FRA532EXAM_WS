@@ -88,7 +88,7 @@ class bridge_node(Node):
 
         self.SigP = np.array([[1e-6, 0, 0], 
                               [0, 1e-6, 0], 
-                              [0, 0, 1e-6]])
+                              [0, 0, 1e-9]])
         # # Initialize the transform broadcaster
         self.tf_br = TransformBroadcaster(self)
 
@@ -109,15 +109,15 @@ class bridge_node(Node):
 
         if abs(accel_x) < 0.2:
             accel_x = 0.0
-        imu_msg.linear_acceleration.x = accel_x
+        imu_msg.linear_acceleration.x = round(accel_x, 1)
         imu_msg.linear_acceleration.y = accel_y
         imu_msg.linear_acceleration.z = accel_z
         
-        imu_msg.angular_velocity.x = gyro_x
-        imu_msg.angular_velocity.y = gyro_y
-        imu_msg.angular_velocity.z = gyro_z
+        imu_msg.angular_velocity.x = round(gyro_x, 2)
+        imu_msg.angular_velocity.y = round(gyro_y, 2)
+        imu_msg.angular_velocity.z = round(gyro_z, 2)
 
-        quaternion = tf_transformations.quaternion_from_euler(msg.data[8]*math.pi/180, -1*msg.data[9]*math.pi/180, -1*msg.data[10]*math.pi/180)
+        quaternion = tf_transformations.quaternion_from_euler(msg.data[8]*math.pi/180, -1*msg.data[9]*math.pi/180, round(-1*msg.data[10]*math.pi/180,3))
         imu_msg.orientation.x = quaternion[0]
         imu_msg.orientation.y = quaternion[1]
         imu_msg.orientation.z = quaternion[2]
@@ -141,6 +141,12 @@ class bridge_node(Node):
         dt = (current_time - self.last_callback_time).to_msg().nanosec * 1e-9
 
         self.last_callback_time = current_time
+
+        if abs(msg.data[0]) > 40:
+            msg.data[0] = 0
+        if abs(msg.data[1]) > 40:
+            msg.data[1] = 0
+
         self.leftwheel_speed = msg.data[0] * (0.0675 / 2)
         self.rightwheel_speed = msg.data[1] * (0.0675 / 2)
 
@@ -153,8 +159,8 @@ class bridge_node(Node):
         self.th += self.delta_th * dt
 
         # Error propagation
-        kr = 1.0e-5
-        kl = 1.0e-5
+        kr = 1.0e-7
+        kl = 1.0e-7
 
         ds = (self.rightwheel_speed + self.leftwheel_speed) * 0.5 * dt
         b = 0.1625
@@ -173,7 +179,7 @@ class bridge_node(Node):
 
         Frl = np.array([[rl11, rl12], 
                         [rl21, rl22], 
-                        [1/b, -1/b]])
+                        [1/(2*b), -1/(2*b)]])
 
         rl_cov = np.array([[kr * abs(self.rightwheel_speed * dt), 0],
                            [0, kl * abs(self.rightwheel_speed * dt)]])
@@ -182,7 +188,9 @@ class bridge_node(Node):
 
         B = (Frl @ rl_cov @ Frl.transpose())
         self.SigP = A + B
-        print(self.SigP)
+        # print(self.SigP)
+        # print("---------")
+        # print(self.SigP[2][2])
 
     def timer_callback(self):
         quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.th)
@@ -205,6 +213,8 @@ class bridge_node(Node):
 
         flat_odom_pose_cov = [item for sublist in self.odom_pose_cov for item in sublist]
         flat_odom_twist_cov = [item for sublist in self.odom_twist_cov for item in sublist]
+
+        flat_odom_pose_cov[-1] = self.SigP[2][2]
 
         odom_msg.pose.covariance = [float(value) for value in flat_odom_pose_cov]
         odom_msg.twist.covariance = [float(value) for value in flat_odom_twist_cov]
