@@ -120,6 +120,13 @@ void TaskOther(void *pvParameters) {
       float left_wheel_speed = Motor.readSpeed(1);
       float right_wheel_speed = Motor.readSpeed(2);
 
+      if(left_wheel_speed > 2048){
+        left_wheel_speed = 0;
+      }
+      if(right_wheel_speed > 2048){
+        right_wheel_speed = 0;
+      }
+
       if(left_wheel_speed > 1024){
         left_wheel_speed = 1024 - left_wheel_speed;
       }
