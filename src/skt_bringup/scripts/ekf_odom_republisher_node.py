@@ -42,7 +42,6 @@ class ekfOdomRepublisher(Node):
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
-        self.raw_theta = 0.0
 
     def timer_callback(self):
         if self.vx_min < self.vx < self.vx_max:
@@ -51,16 +50,13 @@ class ekfOdomRepublisher(Node):
             self.wz = 0.0
 
         # integrate linear position
-        self.x += self.vx * math.cos(self.theta) * self.dt
-        self.y += self.vx * math.sin(self.theta) * self.dt
-
-        # integrate angular position
-        self.theta += self.wz * self.dt
-        self.theta %= 2 * math.pi
+        if abs(self.vx) <= 0.5:
+            self.x += self.vx * math.cos(self.theta) * self.dt
+            self.y += self.vx * math.sin(self.theta) * self.dt
 
         # publish odometry
         # print(self.x, self.y)
-        quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.raw_theta)
+        quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta)
         odom_msg = Odometry()
         odom_msg.header.stamp = self.get_clock().now().to_msg()  # Update time stamp
         odom_msg.header.frame_id = 'odom'
@@ -90,7 +86,7 @@ class ekfOdomRepublisher(Node):
 
     def ekf_odom_callback(self, msg):
         if self.state == 2:
-            self.raw_theta = tf_transformations.euler_from_quaternion([
+            self.theta = tf_transformations.euler_from_quaternion([
                 msg.pose.pose.orientation.x,
                 msg.pose.pose.orientation.y,
                 msg.pose.pose.orientation.z,
