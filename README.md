@@ -213,7 +213,24 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
 - **Wheel Speed Kinematics**
 
-  PLACEHOLDER
+  Inverse Kinematics for differential drive robot is used to convert task-space command (linear velocity and angular velocity) into configuration-space command (angular speed of each wheel)
+
+  ```cpp
+  float meter2rad = 1.0 / 0.03375; // wheel radius
+  float wheel_separation = 0.162; // distance between wheels
+
+  // convert to wheel speeds of differential drive robot (rev/s)
+  float left_wheel_speed = speed_linear * meter2rad - (speed_angular * wheel_separation / 2) * meter2rad;
+  float right_wheel_speed = speed_linear * meter2rad + (speed_angular * wheel_separation / 2) * meter2rad;
+  ```
+
+  An equation acquired from testing is used to convert angular velocity to motor command.
+
+  ```cpp
+  // convert to motor speeds
+  left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+  right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+  ```
 
 <br>
 
