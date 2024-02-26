@@ -33,7 +33,6 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   Core 1: Read IMU and store to a variable
 
   ```cpp
-  // Read IMU
   if (mpu.update()) {
     if (xSemaphoreTake(sem_imu, 0) == pdTRUE) {
       ax = mpu.getAccX();
@@ -108,17 +107,109 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   |   9   |  32  |         Pitch         |
   |  10   |  32  |          Yaw          |
 
-  The performance of the data transmission is over 46Hz
+  The performance of the data transmission is approximately 45Hz.
 
   ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/88512286-c456-41a0-87cb-81f2a6026298)
 
 - **Motor Control by `/cmd_vel`**
 
-  PLACEHOLDER
+  The code for `/cmd_vel` subscription and motor control is split in two parts and run on different CPU core.
+
+  Core 0: Subscribe data from Micro-ROS
+
+  ```cpp
+  void cmd_vel_subscription_callback(const void * msgin) {
+    const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
+    speed_linear = msg->linear.x;
+    speed_angular = msg->angular.z;
+    xSemaphoreGive(sem_motor_run);
+  }
+  ```
+
+  Core 1: Control the motors
+
+  ```cpp
+  if (xSemaphoreTake(sem_motor_run, 0) == pdTRUE) {
+    if(speed_linear == 0 && speed_angular == 0) {
+      Motor.turnWheel(1, LEFT, 0);
+      Motor.turnWheel(2, RIGHT, 0);
+    } else {
+      float meter2rad = 1.0 / 0.03375; // wheel radius
+      float wheel_separation = 0.162; // distance between wheels
+
+      // convert to wheel speeds of differential drive robot (rev/s)
+      float left_wheel_speed = speed_linear * meter2rad - (speed_angular * wheel_separation / 2) * meter2rad;
+      float right_wheel_speed = speed_linear * meter2rad + (speed_angular * wheel_separation / 2) * meter2rad;
+
+      // convert to motor speeds
+      left_wheel_speed = 9.48202984517541 * left_wheel_speed + 0.908799073391677;
+      right_wheel_speed = 9.48202984517541 * right_wheel_speed + 0.908799073391677;
+
+      // send to motors
+      Motor.setSpeed(1, left_wheel_speed);
+      Motor.setSpeed(2, -right_wheel_speed);
+    }
+  }
+  ```
 
 - **Motor Speed Read and Publish**
 
-  PLACEHOLDER
+  The code used to read and publish IMU data is split in two parts and run on different CPU core.
+
+  Core 1: Read motor speed and store to a variable
+
+  ```cpp
+  if (xSemaphoreTake(sem_motor_speed, 0) == pdTRUE) {
+    float left_wheel_speed = Motor.readSpeed(1);
+    float right_wheel_speed = Motor.readSpeed(2);
+
+    if(left_wheel_speed > 1024){
+      left_wheel_speed = 1024 - left_wheel_speed;
+    }
+    if(right_wheel_speed > 1024){
+      right_wheel_speed = right_wheel_speed - 1024;
+    } else {
+      right_wheel_speed = -right_wheel_speed;
+    }
+
+    speed_left = 0.0956657612073996 * left_wheel_speed;
+    speed_right = 0.0956657612073996 * right_wheel_speed;
+    xSemaphoreGive(sem_motor_speed);
+  }
+  ```
+
+  Core 0: Publish data to Micro-ROS
+
+  ```cpp
+  void publish_wheelspeed() {
+    static float _speed_left, _speed_right;
+    if (xSemaphoreTake(sem_motor_speed, 0) == pdTRUE) {
+      _speed_left = speed_left;
+      _speed_right = speed_right;
+      xSemaphoreGive(sem_motor_speed);
+    }
+  
+    static bool first_run = true;
+    if (first_run) {
+      wheel_speeds_msg.data.data = (float *)malloc(2 * sizeof(float));
+      first_run = false;
+    }
+  
+    wheel_speeds_msg.data.size = 2;
+    wheel_speeds_msg.data.data[0] = _speed_left;
+    wheel_speeds_msg.data.data[1] = _speed_right;
+    RCCHECK(rcl_publish(&wheel_speeds_publisher, &wheel_speeds_msg, NULL));
+  }
+  ```
+
+  | Index | Size |     Data    |
+  |:-----:|:----:|:-----------:|
+  |   0   |  32  |  speed_left |
+  |   1   |  32  | speed_right |
+
+  The performance of the data transmission is approximately 45Hz.
+
+  ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/501083bb-af9e-4f38-a9fa-e2e5fd199c4f)
 
 - **Wheel Speed Kinematics**
 
