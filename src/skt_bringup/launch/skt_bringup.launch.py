@@ -38,12 +38,17 @@ def generate_launch_description():
         remappings={("/odom", "/example/odom"),("/tf", "raw_transform")},
     )
 
+    odom_republisher = Node(
+        package='skt_bringup',
+        executable='ekf_odom_republisher_node.py',
+        name='ekf_odom_republisher_node',
+    )
+
     launch_description = LaunchDescription()
     launch_description.add_action(bridge)
     launch_description.add_action(visualize)
     launch_description.add_action(localize)
-
-
+    launch_description.add_action(odom_republisher)
     return launch_description
 
 def main(args=None):

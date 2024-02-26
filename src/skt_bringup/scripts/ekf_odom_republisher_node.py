@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import time
 import math
 import rclpy
 from rclpy.node import Node
@@ -14,6 +15,9 @@ from geometry_msgs.msg import (Point, Pose, PoseWithCovariance, Quaternion,
 class ekfOdomRepublisher(Node):
     def __init__(self):
         super().__init__('ekf_odom_republisher_node')
+        for i in range(5):
+            self.get_logger().info(f"Waiting for ekf node: {5-i}")
+            time.sleep(1)
         self.create_subscription(Odometry, 'odometry/filtered', self.ekf_odom_callback, 10)
         self.publish_odom = self.create_publisher(Odometry, 'odom', 10)
         self.tf_br = TransformBroadcaster(self)
@@ -60,7 +64,7 @@ class ekfOdomRepublisher(Node):
         odom_msg = Odometry()
         odom_msg.header.stamp = self.get_clock().now().to_msg()  # Update time stamp
         odom_msg.header.frame_id = 'odom'
-        odom_msg.child_frame_id = 'base_link'
+        odom_msg.child_frame_id = 'base_footprint'
         odom_msg.pose.pose = Pose(
             position=Point(x=self.x, y=self.y, z=0.0),
             orientation=Quaternion(
@@ -76,7 +80,7 @@ class ekfOdomRepublisher(Node):
         transform = TransformStamped()
         transform.header.stamp = odom_msg.header.stamp
         transform.header.frame_id = 'odom'
-        transform.child_frame_id = 'base_link'  # Make sure it matches the child frame ID in odom_output
+        transform.child_frame_id = 'base_footprint'  # Make sure it matches the child frame ID in odom_output
         transform.transform.translation.x = odom_msg.pose.pose.position.x
         transform.transform.translation.y = odom_msg.pose.pose.position.y
         transform.transform.translation.z = odom_msg.pose.pose.position.z
@@ -102,7 +106,8 @@ class ekfOdomRepublisher(Node):
             self.wz_max = max(self.wz_max, msg.twist.twist.angular.z)
             self.wz_min = min(self.wz_min, msg.twist.twist.angular.z)
             self.count += 1
-            self.get_logger().info(f"Calibrating: {self.count}/{self.amount}")
+            if self.count % 10 == 0:
+                self.get_logger().info(f"Calibrating: {self.count}/{self.amount}")
             if self.count >= self.amount:
                 self.state = 1
         elif self.state == 1:
@@ -112,9 +117,7 @@ class ekfOdomRepublisher(Node):
             self.vx_min -= self.vx_avg + self.margin
             self.wz_max -= self.wz_avg - self.margin
             self.wz_min -= self.wz_avg + self.margin
-            self.get_logger().info('Calibration finished')
-            self.get_logger().info(f'Average vx: {self.vx_avg}')
-            self.get_logger().info(f'Average wz: {self.wz_avg}')
+            self.get_logger().info(f'Calibration finished\nAverage vx: {self.vx_avg}\nAverage wz: {self.wz_avg}')
             del(self.amount)
             del(self.vx_sum)
             del(self.wz_sum)
