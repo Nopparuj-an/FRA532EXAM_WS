@@ -32,6 +32,7 @@ install(PROGRAMS
   scripts/calibrate_node.py
   scripts/ekf_odom_republisher_node.py
   scripts/odom_record.py
+  scripts/cmd_vel_integrate_mode.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

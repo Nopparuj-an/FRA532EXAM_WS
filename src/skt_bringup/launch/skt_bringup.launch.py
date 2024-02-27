@@ -44,11 +44,18 @@ def generate_launch_description():
         name='ekf_odom_republisher_node',
     )
 
+    cmd_vel_integrate_node = Node(
+        package='skt_bringup',
+        executable='cmd_vel_integrate_node.py',
+        name='cmd_vel_integrate_node',
+    )
+
     launch_description = LaunchDescription()
     launch_description.add_action(bridge)
     launch_description.add_action(visualize)
     launch_description.add_action(localize)
     launch_description.add_action(odom_republisher)
+    launch_description.add_action(cmd_vel_integrate_node)
     return launch_description
 
 def main(args=None):

@@ -6,6 +6,7 @@ from nav_msgs.msg import Odometry
 from csv import writer
 from datetime import datetime
 import os
+from std_msgs.msg import Float32MultiArray
 
 
 x = 0.0
@@ -25,12 +26,20 @@ class odom_record(Node):
         super().__init__("odom_record")
 
         self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
+        self.create_subscription(Float32MultiArray, "/cmd_vel_integrated", self.cmd_vel_callback, 10)
         self.create_timer(0.1, self.timer_callback)
+
+        self.integrated_x = 0.0
+        self.integrated_y = 0.0
 
         with open(file_path, "a") as f:
             csv_writer = writer(f)
-            csv_writer.writerow(["time", "x", "y"])
+            csv_writer.writerow(["time", "x", "y", "integrated_x", "integrated_y"])
             print("Saving to: ", file_name)
+
+    def cmd_vel_callback(self, msg):
+        self.integrated_x = msg.data[0]
+        self.integrated_y = msg.data[1]
 
     def odom_callback(self, msg):
         global x, y, t
@@ -43,7 +52,7 @@ class odom_record(Node):
         self.get_logger().info("x: {}, y: {}".format(x, y))
         with open(file_path, "a") as f:
             csv_writer = writer(f)
-            csv_writer.writerow([t, x, y])
+            csv_writer.writerow([t, x, y, self.integrated_x, self.integrated_y])
 
 
 def main(args=None):

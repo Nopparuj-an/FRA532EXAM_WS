@@ -4,12 +4,14 @@ import math
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Float32MultiArray
 
 
 class cmd_vel_integrate_node(Node):
     def __init__(self):
         super().__init__('cmd_vel_integrate_node')
         self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_callback, 10)
+        self.publisher = self.create_publisher(Float32MultiArray, 'cmd_vel_integrated', 10)
         
         self.dt = 0.01
         self.create_timer(self.dt, self.timer_callback)
@@ -24,22 +26,6 @@ class cmd_vel_integrate_node(Node):
     def cmd_vel_callback(self, msg):
         self.cmd_linear_x = msg.linear.x
         self.cmd_angular_z = msg.angular.z
-        # if self.first_run:
-        #     self.last_time = self.get_clock().now().nanoseconds * 1e-9
-        #     self.first_run = False
-        #     return
-        
-        # current_time = self.get_clock().now().nanoseconds * 1e-9
-        # dt = current_time - self.last_time
-        # self.last_time = current_time
-
-        # # integrate angular position
-        # self.theta += msg.angular.z * dt
-        # self.theta %= 2 * math.pi
-
-        # # integrate linear position
-        # self.x += msg.linear.x * math.cos(self.theta) * dt
-        # self.y += msg.linear.x * math.sin(self.theta) * dt
 
     def timer_callback(self):
         # integrate linear position
@@ -50,6 +36,7 @@ class cmd_vel_integrate_node(Node):
         self.theta += self.cmd_angular_z * self.dt
         self.theta %= 2 * math.pi
 
+        self.publisher.publish(Float32MultiArray(data=[self.x, self.y]))
         print(self.x, self.y)
 
 
