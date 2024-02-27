@@ -26,20 +26,27 @@ class odom_record(Node):
         super().__init__("odom_record")
 
         self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
+        self.create_subscription(Odometry, "/example/odom", self.ekf_callback, 10)
         self.create_subscription(Float32MultiArray, "/cmd_vel_integrated", self.cmd_vel_callback, 10)
         self.create_timer(0.1, self.timer_callback)
 
         self.integrated_x = 0.0
         self.integrated_y = 0.0
+        self.ekf_x = 0.0
+        self.ekf_y = 0.0
 
         with open(file_path, "a") as f:
             csv_writer = writer(f)
-            csv_writer.writerow(["time", "x", "y", "integrated_x", "integrated_y"])
+            csv_writer.writerow(["time", "odom_y", "odom_x", "integrated_y", "integrated_x", "ekf_y", "ekf_x"])
             print("Saving to: ", file_name)
 
     def cmd_vel_callback(self, msg):
         self.integrated_x = msg.data[0]
         self.integrated_y = msg.data[1]
+
+    def ekf_callback(self, msg):
+        self.ekf_x = msg.pose.pose.position.x
+        self.ekf_y = msg.pose.pose.position.y
 
     def odom_callback(self, msg):
         global x, y, t
@@ -49,10 +56,10 @@ class odom_record(Node):
 
     def timer_callback(self):
         global x, y, t
-        self.get_logger().info("x: {}, y: {}".format(x, y))
+        self.get_logger().info(f"\nOdom: {y}, {x}\nIntegrated: {self.integrated_y}, {self.integrated_x}\nEKF: {self.ekf_y}, {self.ekf_x}")
         with open(file_path, "a") as f:
             csv_writer = writer(f)
-            csv_writer.writerow([t, x, y, self.integrated_x, self.integrated_y])
+            csv_writer.writerow([t, y, x, self.integrated_y, self.integrated_x, self.ekf_y, self.ekf_x])
 
 
 def main(args=None):
