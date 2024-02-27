@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.autoComplete.extraPaths": [
+			"/home/nopparuj/FRA532EXAM_WS/install/micro_ros_msgs/local/lib/python3.10/dist-packages",
+			"/opt/ros/humble/lib/python3.10/site-packages",
+			"/opt/ros/humble/local/lib/python3.10/dist-packages"
+		],
+		"python.analysis.extraPaths": [
+			"/home/nopparuj/FRA532EXAM_WS/install/micro_ros_msgs/local/lib/python3.10/dist-packages",
+			"/opt/ros/humble/lib/python3.10/site-packages",
+			"/opt/ros/humble/local/lib/python3.10/dist-packages"
+		]
+	}
+}
