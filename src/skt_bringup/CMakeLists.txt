@@ -31,6 +31,7 @@ install(PROGRAMS
   scripts/bridge_node.py
   scripts/calibrate_node.py
   scripts/ekf_odom_republisher_node.py
+  scripts/odom_record.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
