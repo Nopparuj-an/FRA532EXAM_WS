@@ -25,8 +25,8 @@ class odom_record(Node):
     def __init__(self):
         super().__init__("odom_record")
 
-        self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
-        self.create_subscription(Odometry, "/example/odom", self.ekf_callback, 10)
+        self.create_subscription(Odometry, "/example/odom", self.odom_callback, 10)
+        self.create_subscription(Odometry, "/odom", self.ekf_callback, 10)
         self.create_subscription(Float32MultiArray, "/cmd_vel_integrated", self.cmd_vel_callback, 10)
         self.create_timer(0.1, self.timer_callback)
 

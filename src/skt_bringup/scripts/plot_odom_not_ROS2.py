@@ -25,6 +25,11 @@ ekf_y = data['ekf_y'].to_numpy()
 try:
     absolute_x = data['x'].to_numpy()
     absolute_y = data['y'].to_numpy()
+    for i in range(1, len(absolute_x)):
+        absolute_x[i] = (absolute_x[i] - absolute_x[0]) * 0.888
+        absolute_y[i] = (absolute_y[i] - absolute_y[0]) * 0.894
+    absolute_x[0] = 0
+    absolute_y[0] = 0
 except:
     use_absolute = False
 
@@ -40,4 +45,6 @@ plt.ylabel('y')
 plt.title('Plot of x vs y from the latest file')
 plt.grid(True)
 plt.legend()
+# plt.xlim(-0.1, 1.1)
+# plt.ylim(-0.5, 0.5)
 plt.show()
