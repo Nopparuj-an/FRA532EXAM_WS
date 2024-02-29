@@ -12,6 +12,24 @@ This project is a part of FRA532 Mobile Robot @ Institute of Field Robotics, Kin
 
 <br>
 
+## Usage
+
+Clone the git repository to your computer
+```bash
+git clone https://github.com/Nopparuj-an/FRA532EXAM_WS.git
+```
+Build the workspace
+```bash
+cd FRA532EXAM_WS
+colcon build
+source install/setup.bash
+```
+Run
+```bash
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+ros2 launch skt_bringup skt_bringup.launch.py
+```
+
 ## Microcontroller Programming
 
 You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an/FRA532EXAM_WS/blob/master/src/micro-ros_publisher/src/main.cpp)
