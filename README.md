@@ -346,10 +346,22 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/d33fb052-adb8-42aa-8ea6-181b282ccf5e) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3031894-f629-4837-b90d-b73ae2c78699) |
   | Cumulative Error: | X: 0.8861 Y: 1.0993 |
 
-- **Adjusting covariance of wheel odometry and IMU**
+- **Adjusting covariance of wheel odometry and IMU & EKF configurations**
 
-  PLACEHOLDER
+  | Values | Line | Circle | C |
+  | :-: | :-: | :-: | :-: |
+  | PLACEHOLDER | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/5000a8f7-9430-495c-95e6-7f3777baff72) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/800b5d33-30fd-426d-baff-3c51eeb69dca) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2bc52f1e-185d-40c2-bd35-6a831d51ad4b) |
+  | PLACEHOLDER | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/af3bb111-1d47-4d10-bf4f-5e071f8bc75b) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/d92e102c-472f-4b95-bc80-89bdd6a8df45) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/776528cd-1435-4dd0-933d-c2385b48abd3) |
+  | PLACEHOLDER | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/539c6b28-e40d-46e5-a922-ba2d4416d816) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/3856ca7b-abbf-4370-96f1-26e5557ec65b) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/1f1d598d-314c-444d-974b-f9f3a9200c26) |
 
-- **Adjusting EKF configurations**
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3cb8918-ae76-4e6c-99a8-d38ef9ca3924)
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/32db5ea5-cf63-4798-b6af-742b2e79466a)
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/433212f1-d448-44cd-8283-0c4a7c65e056)
 
-  PLACEHOLDER
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/fdd2dd0e-4677-4e1a-a05d-0cd0a51b0e62)
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0153dafa-ad13-4f16-8508-32f1762064a5)
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/da4d3c4f-cdc2-48a6-b379-96575124cb50)
+
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/c0c2a8b8-c535-429d-9efd-2ee210c10fd5)
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2da30337-6e15-4c26-8bd9-e2c32dca831d)
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/07a004b8-f41b-4644-8d8e-00954eb2b5d4)
