@@ -236,29 +236,87 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
 ## Computer Programming
 
-- **IMU Calibration Node**
+- **IMU Calibration Node Explained**
+  
+  This section clarifies the purpose and usage of the `calibrate_node.py` script, which performs IMU calibration.
+  
+  **What it does:**
+  
+  * The script, named `calibrate_node.py`, acts as a ROS 2 node responsible for calibrating an Inertial Measurement Unit (IMU).
+  * During the calibration process, the node calculates:
+      * **IMU bias:** This value represents systematic errors inherent in the IMU's sensors, such as slight offsets from their ideal readings.
+      * **IMU covariance:** This matrix describes the uncertainties associated with the IMU's measurements, providing an indication of the data's reliability.
+  * Once calculated, the node saves these values to a YAML file, which can be used later to compensate for the IMU's biases and incorporate the covariance information into your application.
+  
+  **How to run it:**
+  
+  1. **Open a terminal window.**
+  2. **Ensure ROS 2 is properly sourced and running.**
+  3. **Execute the following command:**
 
-  PLACEHOLDER
-
-  - **Calculating covariance**
-
-    PLACEHOLDER
-
-  - **Saving covariance and offsets to `.yaml` file**
-
-    PLACEHOLDER
-
+  ```bash
+  ros2 run skt_bringup calibrate_node.py
+  ```
+   Config will save to this [path](https://github.com/Nopparuj-an/FRA532EXAM_WS/blob/master/config/feedback_config.yaml)
 - **Robot Bridge Node**
+    The main function of bridge node have 3 funtion first is calculated odometry and pose covarience odometry name  `example/odom` and other is to transform raw value of IMU to calibrated value name `example/imu`.
 
-  PLACEHOLDER
+  - **Calculating odometry**
+    
+    Generally the pose (position) of a robot is represented by the vector:
+    
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/9c4c62f6-ef0c-4454-90ea-f786307010e6)
 
-  - **Calculating odometry and covariance from wheel angular velocity**
+    for differential robot we can write (Δx, Δy, Δθ) as.
 
-    Odom pose covarience  
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/a97da59f-f2f7-4b8b-9c31-bef980a679a9)
+
+    where:
+
+    (Δx; Δy; Δθ) = path traveled in the last sampling interval. (Δs_r; Δs_l) = traveled distances for the right and left wheel respectively. b = distance between the two wheels of differential-drive robot
+
+    then position updated can write as
+
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/d242eb59-a04b-4eaf-81dc-bcc4e89fa6e6)
+    
+    
+  - **Calculate odom pose covarience**  
+  There are many sources of odometric error, some of them are:
+    - Limited resolution during integration (time increments, measurement resolution, etc.);
+    - Misalignment of the wheels (deterministic);
+    - Uncertainty in the wheel diameter and in particular unequal wheel diameter (deterministic);
+    - Variation in the contact point of the wheel;
+    - Unequal floor contact (slipping, nonplanar surface, etc.).
+    
+      So we use error propagation to estimated covarience of the odom pose
+    
+      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/fa01ff4c-7d7d-480c-a772-22caa73f85d1)
+    
+      where:
+      
+      C_x = covariance matrix representing the input uncertainties
+      
+      C_y = covariance matrix representing the propagated uncertainties for the outputs
+      
+      F_x = is the Jacobian matrix of the vehicle pose model f
+
+      Giving us the pose covarience estimate:
+
+      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/3d8dff40-e171-4ce8-99a5-6c94b0df415a)
+
+      where:
+
+      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/bd0ce4da-91bd-463c-a673-f9b46b7e429d)
+
+      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/2cd37ea6-8239-443f-94e8-f9ce03e5e4f5)
+
+      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/46ff8440-9b3c-4bb0-927a-1a9768d6d0bf)
+
+       The values for the errors konstant k_r and k_l depend on the robot and the environment and should be exprerimentally established by performing and analyzing representative movements.
 
   - **Reading covariance and offset from the file and publish IMU topic**
 
-    PLACEHOLDER
+  Fully explaination about error propagation see in this [link](https://www.youtube.com/watch?v=ubg_AAM7Zd8) 
 
 - **Robot Description**
   The primary purpose of the `skt_description` package is to provide a comprehensive description of the robot's physical structure, including its base, caster frame, sensor frames, and any additional components required for visualization and simulation within the ROS environment.
@@ -288,9 +346,6 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
                   false,  false,  true,
                   true,  false,  false]
     ```
-
-
-<br>
 
 ## Testing and Laboratories
 
