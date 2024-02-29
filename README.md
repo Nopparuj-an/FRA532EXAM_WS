@@ -344,7 +344,6 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
        Fully explaination about error propagation see in this [link](https://www.youtube.com/watch?v=ubg_AAM7Zd8) 
 
-  - **Reading covariance and offset from the file and publish IMU topic**
 
 - **Robot Description**
   The primary purpose of the `skt_description` package is to provide a comprehensive description of the robot's physical structure, including its base, caster frame, sensor frames, and any additional components required for visualization and simulation within the ROS environment.
