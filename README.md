@@ -316,33 +316,33 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
     - Variation in the contact point of the wheel;
     - Unequal floor contact (slipping, nonplanar surface, etc.).
     
-      So we use error propagation to estimated covarience of the odom pose
+    So we use error propagation to estimated covarience of the odom pose
+  
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/fa01ff4c-7d7d-480c-a772-22caa73f85d1)
+  
+    where:
     
-      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/fa01ff4c-7d7d-480c-a772-22caa73f85d1)
+    C_x = covariance matrix representing the input uncertainties
     
-      where:
-      
-      C_x = covariance matrix representing the input uncertainties
-      
-      C_y = covariance matrix representing the propagated uncertainties for the outputs
-      
-      F_x = is the Jacobian matrix of the vehicle pose model f
+    C_y = covariance matrix representing the propagated uncertainties for the outputs
+    
+    F_x = is the Jacobian matrix of the vehicle pose model f
 
-      Giving us the pose covarience estimate:
+    Giving us the pose covarience estimate:
 
-      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/3d8dff40-e171-4ce8-99a5-6c94b0df415a)
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/3d8dff40-e171-4ce8-99a5-6c94b0df415a)
 
-      where:
+    where:
 
-      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/bd0ce4da-91bd-463c-a673-f9b46b7e429d)
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/bd0ce4da-91bd-463c-a673-f9b46b7e429d)
 
-      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/2cd37ea6-8239-443f-94e8-f9ce03e5e4f5)
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/2cd37ea6-8239-443f-94e8-f9ce03e5e4f5)
 
-      ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/46ff8440-9b3c-4bb0-927a-1a9768d6d0bf)
+    ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/46ff8440-9b3c-4bb0-927a-1a9768d6d0bf)
 
-       The values for the errors konstant k_r and k_l depend on the robot and the environment and should be exprerimentally established by performing and analyzing representative movements.
+     The values for the errors konstant k_r and k_l depend on the robot and the environment and should be exprerimentally established by performing and analyzing representative movements.
 
-       Fully explaination about error propagation see in this [link](https://www.youtube.com/watch?v=ubg_AAM7Zd8) 
+     Fully explaination about error propagation see in this [link](https://www.youtube.com/watch?v=ubg_AAM7Zd8) 
 
 
 - **Robot Description**
