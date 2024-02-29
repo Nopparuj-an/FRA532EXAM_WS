@@ -365,6 +365,11 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0a9d7b48-c997-4915-9857-c76cef382d67)
 
+  Compare with the Perspective projection <-> Orthographic Projection [see more](https://github.com/Kangonaut/simple-perspective-projection)
+  
+  ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/510b9612-62b2-4aee-ba41-69ff62c7cc1e)
+
+  We can see that the ratio form ideal and real world experiment are close.
 - **Finding relationship between command and velocity of Dynamixel motors**
 
   A simple code that detects motor position wrap-around and record the amount of counts and time is used to find the frequency of the motor.
@@ -396,7 +401,7 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   | Position | Error |
   |:-:|:-:|
   | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/06c11942-fff8-4c76-b18b-1049c45fb6b0) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/666da6ff-ffc3-4557-953d-b2a5ebfe408b) |
-  | Cumulative Error: | X: -1.5370 Y: -0.5319 |
+  | Cumulative Error: | X: -1.5370 m Y: -0.5319 m |
 
   <br>
 
@@ -405,7 +410,7 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   | Position | Error |
   |:-:|:-:|
   | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/d33fb052-adb8-42aa-8ea6-181b282ccf5e) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3031894-f629-4837-b90d-b73ae2c78699) |
-  | Cumulative Error: | X: 0.8861 Y: 1.0993 |
+  | Cumulative Error: | X: 0.8861 m Y: 1.0993 m |
 
 - **Adjusting covariance of wheel odometry and IMU & EKF configurations (Unit in meters)**
 
