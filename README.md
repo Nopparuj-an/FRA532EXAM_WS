@@ -1,6 +1,8 @@
 # FRA532 Mobile Robot: Exam I
 
-PLACEHOLDER
+This project focuses on implementing Micro-ROS, odometry and localization using EKF.
+
+This project is a part of FRA532 Mobile Robot @ Institute of Field Robotics, King Mongkut’s University of Technology Thonburi
 
 <br>
 
