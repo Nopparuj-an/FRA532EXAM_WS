@@ -30,6 +30,8 @@ ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
 ros2 launch skt_bringup skt_bringup.launch.py
 ```
 
+<br>
+
 ## Microcontroller Programming
 
 You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an/FRA532EXAM_WS/blob/master/src/micro-ros_publisher/src/main.cpp)
@@ -431,6 +433,17 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   |:-:|:-:|
   | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/d33fb052-adb8-42aa-8ea6-181b282ccf5e) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3031894-f629-4837-b90d-b73ae2c78699) |
   | Cumulative Error: | X: 0.8861 m Y: 1.0993 m |
+
+  <br>
+
+- **Finding relationship between actual position EKF (Unit in meters)**
+
+  | Position | Error |
+  |:-:|:-:|
+  | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/7627784e-b084-441f-95f9-234b12fbde8a) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/4da64a76-4d4e-459b-8c32-6917a12667c6) |
+  | Cumulative Error: | X: 0.0628 m Y: -0.1513 m |
+
+  <br>
 
 - **Adjusting covariance of wheel odometry and IMU & EKF configurations (Unit in meters)**
 
