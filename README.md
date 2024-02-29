@@ -417,8 +417,17 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
   ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2b8b7c23-bc8f-4e88-9a38-10a52e235492)
 
   <br>
+- **Adjusting covariance of wheel odometry and IMU & EKF configurations (Unit in meters)**
 
-- **Finding relationship between actual position and wheel odometry (Unit in meters)**
+  | Values | Line | Circle | C |
+  | :-: | :-: | :-: | :-: |
+  | odom_vx_cov : 1.0e-6 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-10| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/433212f1-d448-44cd-8283-0c4a7c65e056) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/fdd2dd0e-4677-4e1a-a05d-0cd0a51b0e62) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/c0c2a8b8-c535-429d-9efd-2ee210c10fd5) |
+  | odom_vx_cov : 1.0e-9 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-9| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/32db5ea5-cf63-4798-b6af-742b2e79466a) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0153dafa-ad13-4f16-8508-32f1762064a5) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2da30337-6e15-4c26-8bd9-e2c32dca831d) |
+  | odom_vx_cov : 1.0e-12 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-8| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3cb8918-ae76-4e6c-99a8-d38ef9ca3924) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/da4d3c4f-cdc2-48a6-b379-96575124cb50) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/07a004b8-f41b-4644-8d8e-00954eb2b5d4) |
+
+ Adjusting robot sensor covariances like `odom_vx_cov` (odometry velocity uncertainty) and `kr`, `kl` (Kalman filter state covariance growth) affects how it fuses sensor data. Increasing `odom_vx_cov` makes the robot rely more on the accelerometer for estimating wheel slip, while higher `kr` , `kl` values lead to faster trust in gyroscope and magnetometer data for orientation. These specific covariances (`1.0e-6`, `1.0e-10`) are a starting point and need to be fine-tuned based on the robot's sensors, environment, and desired balance between responsiveness and stability.
+ 
+- **Cumulative error between actual position and wheel odometry (Unit in meters)**
 
   | Position | Error |
   |:-:|:-:|
@@ -427,7 +436,7 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   <br>
 
-- **Finding relationship between actual position `/cmd_vel` (Unit in meters)**
+- **Cumulative error between actual position `/cmd_vel` (Unit in meters)**
 
   | Position | Error |
   |:-:|:-:|
@@ -436,7 +445,7 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   <br>
 
-- **Finding relationship between actual position EKF (Unit in meters)**
+- **Cumulative error between actual position EKF (Unit in meters)**
 
   | Position | Error |
   |:-:|:-:|
@@ -445,10 +454,3 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   <br>
 
-- **Adjusting covariance of wheel odometry and IMU & EKF configurations (Unit in meters)**
-
-  | Values | Line | Circle | C |
-  | :-: | :-: | :-: | :-: |
-  | odom_vx_cov : 1.0e-6 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-10| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/433212f1-d448-44cd-8283-0c4a7c65e056) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/fdd2dd0e-4677-4e1a-a05d-0cd0a51b0e62) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/c0c2a8b8-c535-429d-9efd-2ee210c10fd5) |
-  | odom_vx_cov : 1.0e-9 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-9| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/32db5ea5-cf63-4798-b6af-742b2e79466a) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0153dafa-ad13-4f16-8508-32f1762064a5) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2da30337-6e15-4c26-8bd9-e2c32dca831d) |
-  | odom_vx_cov : 1.0e-12 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-8| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3cb8918-ae76-4e6c-99a8-d38ef9ca3924) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/da4d3c4f-cdc2-48a6-b379-96575124cb50) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/07a004b8-f41b-4644-8d8e-00954eb2b5d4) |
