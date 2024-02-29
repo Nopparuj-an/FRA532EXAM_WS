@@ -294,6 +294,16 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
 ## Testing and Laboratories
 
+- **Getting absolute position of the robot**
+
+  Using a calibration stick the same height as the robot tracking point, we place it at various position on X and Y axis and take the picture. Then using the Tracker software, we find out the top position and the base position of the stick
+  
+  ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/83bad1e8-6a14-48f5-bfd0-e081711f1324)
+
+  Then using a spreadsheet to plot and calculate the correction equation, we can now use the formular to compensate for the height of the robot.
+
+  ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0a9d7b48-c997-4915-9857-c76cef382d67)
+
 - **Finding relationship between command and velocity of Dynamixel motors**
 
   A simple code that detects motor position wrap-around and record the amount of counts and time is used to find the frequency of the motor.
