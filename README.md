@@ -318,13 +318,23 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2b8b7c23-bc8f-4e88-9a38-10a52e235492)
 
+  <br>
+
 - **Finding relationship between actual position and wheel odometry**
 
-  PLACEHOLDER
+  | Position | Error |
+  |:-:|:-:|
+  | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/06c11942-fff8-4c76-b18b-1049c45fb6b0) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/666da6ff-ffc3-4557-953d-b2a5ebfe408b) |
+  | Cumulative Error: | X: -1.5370 Y: -0.5319 |
+
+  <br>
 
 - **Finding relationship between actual position `/cmd_vel`**
 
-  PLACEHOLDER
+  | Position | Error |
+  |:-:|:-:|
+  | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/d33fb052-adb8-42aa-8ea6-181b282ccf5e) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3031894-f629-4837-b90d-b73ae2c78699) |
+  | Cumulative Error: | X: 0.8861 Y: 1.0993 |
 
 - **Adjusting covariance of wheel odometry and IMU**
 
