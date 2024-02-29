@@ -391,7 +391,7 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   <br>
 
-- **Finding relationship between actual position and wheel odometry**
+- **Finding relationship between actual position and wheel odometry (Unit in meters)**
 
   | Position | Error |
   |:-:|:-:|
@@ -400,18 +400,17 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
   <br>
 
-- **Finding relationship between actual position `/cmd_vel`**
+- **Finding relationship between actual position `/cmd_vel` (Unit in meters)**
 
   | Position | Error |
   |:-:|:-:|
   | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/d33fb052-adb8-42aa-8ea6-181b282ccf5e) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3031894-f629-4837-b90d-b73ae2c78699) |
   | Cumulative Error: | X: 0.8861 Y: 1.0993 |
 
-- **Adjusting covariance of wheel odometry and IMU & EKF configurations**
+- **Adjusting covariance of wheel odometry and IMU & EKF configurations (Unit in meters)**
 
   | Values | Line | Circle | C |
   | :-: | :-: | :-: | :-: |
-  | odom_vx_cov : 1.0e-6 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-10| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/433212f1-d448-44cd-8283-0c4a7c65e056) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/fdd2dd0e-4677-4e1a-a05d-0cd0a51b0e62) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2bc52f1e-185d-40c2-bd35-6a831d51ad4b) |
-  | odom_vx_cov : 1.0e-9 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-9| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/32db5ea5-cf63-4798-b6af-742b2e79466a) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0153dafa-ad13-4f16-8508-32f1762064a5) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/776528cd-1435-4dd0-933d-c2385b48abd3) |
-  | odom_vx_cov : 1.0e-12 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-8| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3cb8918-ae76-4e6c-99a8-d38ef9ca3924) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/da4d3c4f-cdc2-48a6-b379-96575124cb50) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/1f1d598d-314c-444d-974b-f9f3a9200c26) |
-
+  | odom_vx_cov : 1.0e-6 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-10| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/433212f1-d448-44cd-8283-0c4a7c65e056) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/fdd2dd0e-4677-4e1a-a05d-0cd0a51b0e62) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/c0c2a8b8-c535-429d-9efd-2ee210c10fd5) |
+  | odom_vx_cov : 1.0e-9 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-9| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/32db5ea5-cf63-4798-b6af-742b2e79466a) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/0153dafa-ad13-4f16-8508-32f1762064a5) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/2da30337-6e15-4c26-8bd9-e2c32dca831d) |
+  | odom_vx_cov : 1.0e-12 odom_wz_cov : 1.0e-6 kr,kl : 1.0 e-8| ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/f3cb8918-ae76-4e6c-99a8-d38ef9ca3924) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/da4d3c4f-cdc2-48a6-b379-96575124cb50) | ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/07a004b8-f41b-4644-8d8e-00954eb2b5d4) |
