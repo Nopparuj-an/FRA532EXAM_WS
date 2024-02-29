@@ -4,6 +4,12 @@ PLACEHOLDER
 
 <br>
 
+## System Diagram
+
+![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/47713359/4d0b79ab-859c-44ab-9d02-f8867203b138)
+
+<br>
+
 ## Microcontroller Programming
 
 You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an/FRA532EXAM_WS/blob/master/src/micro-ros_publisher/src/main.cpp)
