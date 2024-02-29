@@ -236,7 +236,7 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
 ## Computer Programming
 
-- **Sensor Calibration Node**
+- **IMU Calibration Node**
 
   PLACEHOLDER
 
@@ -262,101 +262,33 @@ You can see the code here: [ESP32 Micro-ROS code](https://github.com/Nopparuj-an
 
 - **Robot Description**
   The primary purpose of the `skt_description` package is to provide a comprehensive description of the robot's physical structure, including its base, caster frame, sensor frames, and any additional components required for visualization and simulation within the ROS environment.
-
-  To view robot_frame:
-  ```cpp
-  ros2 run tf2_tools view_frames 
-  ```
- ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/b503afc6-1b7a-4f30-8080-b16d1cc28ea2)
+  
+    To view robot_frame:
+    ```cpp
+    ros2 run tf2_tools view_frames 
+    ```
+   ![image](https://github.com/Nopparuj-an/FRA532EXAM_WS/assets/122732439/b503afc6-1b7a-4f30-8080-b16d1cc28ea2)
 
 
 - **robot_localization configuration**
-    ```py
-    ### ekf config file ###
-    ekf_filter_node:
-        ros__parameters:
-            frequency: 10.0
-            sensor_timeout: 0.1
-            two_d_mode: false
+    In configuring [robot\_localization](http://docs.ros.org/en/melodic/api/robot\_localization/html/configuring\_robot\_localization.html), we strategically reduce the information fused by eliminating redundant data such as $\( X \)$ and $\( Y \)$ positions and using only $\( X \)$ and $\( Y \)$ velocities $\( v_x \)$ and $\( v_y \)$, derived from the same source. We enable the fusion of $\( v_y \)$ to allow for error estimation in the $\( Y \)$-axis. Additionally, we incorporate absolute yaw orientation from odometry data to complement $\( w_z \)$ (yaw rate) from the IMU, acknowledging the inherent uncertainties in mechanical systems and IMU yaw readings affected by hard iron and soft iron effects. We include $\( a_x \)$ to estimate system slip. The configuration parameters are as follows:
     
-            predict_to_current_time: true
+    ```yaml
+    odom0: example/odom
+    odom0_config: [false,  false,  false,
+                   false, false, true,
+                   true, true, false,
+                   false, false, true,
+                   false, false, false]
     
-            transform_time_offset: 2.0
-            print_diagnostics: true
-    
-            publish_tf: false
-    
-            map_frame: map              # Defaults to "map" if unspecified
-            odom_frame: odom            # Defaults to "odom" if unspecified
-            base_link_frame: base_footprint # Defaults to "base_link" if unspecified
-            world_frame: odom           # Defaults to the value of odom_frame if unspecified
-    
-            # xyz rpy vxyz vrpy axyz
-            odom0: example/odom
-            odom0_config: [false,  false,  false,
-                           false, false, true,
-                           true, true, false,
-                           false, false, true,
-                           false, false, false]
-            odom0_queue_size: 10
-            odom0_differential: false
-            odom0_relative: true
-    
-            # xyz rpy vxyz vrpy axyz
-            imu0: example/imu
-            imu0_config: [false, false, false,
-                          false,  false,  true,
-                          false, false, false,
-                          false,  false,  true,
-                          true,  false,  false]
-    
-            imu0_differential: false
-            imu0_relative: true
-            imu0_queue_size: 10
-            imu0_remove_gravitational_acceleration: true
-    
-            use_control: false
-    
-            initial_state: [0.0,  0.0,  0.0,
-                            0.0,  0.0,  0.0,
-                            0.0,  0.0,  0.0,
-                            0.0,  0.0,  0.0,
-                            0.0,  0.0,  0.0]
-    
-            process_noise_covariance: [0.05, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.05, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.06, 0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.03, 0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.03, 0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.06, 0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.025, 0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.025, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.04, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.01, 0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.01, 0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.02, 0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.01, 0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.01, 0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.015]
-    
-            initial_estimate_covariance: [1.0e-9, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    1.0e-9, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    1.0e-9, 0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    1.0e-9, 0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    1.0e-9, 0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    1.0e-9, 0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1.0e-9, 0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     1.0e-9, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1.0e-9, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1.0e-9, 0.0,    0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1.0e-9, 0.0,    0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    1.0e-9, 0.0,    0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1.0e-9, 0.0,    0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1.0e-9, 0.0,
-                                       0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1.0e-9]
-
+    imu0: example/imu
+    imu0_config: [false, false, false,
+                  false,  false,  true,
+                  false, false, false,
+                  false,  false,  true,
+                  true,  false,  false]
     ```
-  PLACEHOLDER
+
 
 <br>
 
